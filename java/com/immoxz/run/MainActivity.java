@@ -9,25 +9,13 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
-import java.util.Map;
-
-import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private SensorManager mSensorManager;
@@ -91,16 +79,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         storagePath = getApplication().getFilesDir();
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
-            externalStoragePath = System.getenv("PRIMARY_STORAGE");
+            externalStoragePath = System.getenv("EXTERNAL_STORAGE");
             externalSDStoragePath = System.getenv("SECONDARY_STORAGE");
             dbPath.setText(externalStoragePath + "\n" + externalSDStoragePath);
         }
 
-        this.myDBName = "myAccValues";
+        this.myDBName = "myNEWAccValues";
         myDBPath = externalStoragePath + "/" + myDBName;
         dbPath.append("\nDB path: " + myDBPath);
         try {
-            db = openOrCreateDatabase(myDBPath, MODE_PRIVATE, null);
+            db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
             db.execSQL("DROP table IF EXISTS [tb_values];");
             db.execSQL("create table tb_values ("
                     + " recId integer Primary Key autoincrement, "
@@ -108,9 +96,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     + " value_two text, "
                     + " value_three text ); ");
             dbPath.append("\nINSERTING VALUES");
-            db.execSQL("insert into tb_values ("
-                    + " value_one, " + " value_two, " + " value_three) values ("
-                    + "'TEST'" + "'TEST'" + "'TEST');");
+//            db.execSQL("insert into tb_values ("
+//                    + " value_one, " + " value_two, " + " value_three) values ("
+//                    + "'TEST'" + "'TEST'" + "'TEST');");
             db.close();
             dbPath.append("\nAll Done");
 
@@ -125,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 myDBPath = externalSDStoragePath + "/" + myDBName;
                 dbPath.append("\nDB path: " + myDBPath);
                 try {
-                    db = openOrCreateDatabase(myDBPath, MODE_PRIVATE, null);
+                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
                     db.execSQL("DROP table IF EXISTS [tb_values];");
                     db.execSQL("create table tb_values ("
                             + " recId integer Primary Key autoincrement, "
@@ -133,9 +121,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             + " value_two text, "
                             + " value_three text ); ");
                     dbPath.append("\nINSERTING VALUES");
-                    db.execSQL("insert into tb_values ("
-                            + " value_one, " + " value_two, " + " value_three) values ("
-                            + "'TEST'" + "'TEST'" + "'TEST');");
+//                    db.execSQL("insert into tb_values ("
+//                            + " value_one, " + " value_two, " + " value_three) values ("
+//                            + "'TEST'" + "'TEST'" + "'TEST');");
                     db.close();
                     dbPath.append("\nAll Done");
 
@@ -150,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 myDBPath = storagePath + "/" + myDBName;
                 dbPath.append("\nDB path: " + myDBPath);
                 try {
-                    db = openOrCreateDatabase(myDBPath, MODE_PRIVATE, null);
+                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
                     db.execSQL("DROP table IF EXISTS [tb_values];");
                     db.execSQL("create table tb_values ("
                             + " recId integer Primary Key autoincrement, "
@@ -158,9 +146,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             + " value_two text, "
                             + " value_three text ); ");
                     dbPath.append("\nINSERTING VALUES");
-                    db.execSQL("insert into tb_values ("
-                            + " value_one, " + " value_two, " + " value_three) values ("
-                            + "'TEST'" + "'TEST'" + "'TEST');");
+//                    db.execSQL("insert into tb_values ("
+//                            + " value_one, " + " value_two, " + " value_three) values ("
+//                            + "'TEST'" + "'TEST'" + "'TEST');");
                     db.close();
                     dbPath.append("\nAll Done");
 
@@ -172,7 +160,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         copyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //fileManager.copyFile(dbSave[0], dbSave[1], externalStoragePath + "/" + "testDir");
+                myDBPath = externalStoragePath + "/" + myDBName;
+                dbPath.append("\nDB path: " + myDBPath);
+                try {
+                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+                    db.execSQL("DROP table IF EXISTS [tb_values];");
+                    db.execSQL("create table tb_values ("
+                            + " recId integer Primary Key autoincrement, "
+                            + " value_one text, "
+                            + " value_two text, "
+                            + " value_three text ); ");
+                    dbPath.append("\nINSERTING VALUES");
+//            db.execSQL("insert into tb_values ("
+//                    + " value_one, " + " value_two, " + " value_three) values ("
+//                    + "'TEST'" + "'TEST'" + "'TEST');");
+                    db.close();
+                    dbPath.append("\nAll Done");
+
+                } catch (SQLiteException e) {
+                    dbPath.setText("\nERROR " + e.getMessage());
+                }
             }
         });
 
