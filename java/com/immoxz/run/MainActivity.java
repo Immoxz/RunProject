@@ -9,6 +9,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -77,109 +78,58 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSensorManager.requestTriggerSensor(mTriggerEventListener, accSensor);
         accSensorNameView.setText(accSensor.getName());
 
-        storagePath = getApplication().getFilesDir();
+
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
-            externalStoragePath = System.getenv("EXTERNAL_STORAGE");
-            externalSDStoragePath = System.getenv("SECONDARY_STORAGE");
-            dbPath.setText(externalStoragePath + "\n" + externalSDStoragePath);
-        }
+            storagePath = Environment.getExternalStorageDirectory().getAbsoluteFile();
 
-        this.myDBName = "myNEWAccValues";
-        myDBPath = externalStoragePath + "/" + myDBName;
-        dbPath.append("\nDB path: " + myDBPath);
-        try {
-            db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-            db.execSQL("DROP table IF EXISTS [tb_values];");
-            db.execSQL("create table tb_values ("
-                    + " recId integer Primary Key autoincrement, "
-                    + " value_one text, "
-                    + " value_two text, "
-                    + " value_three text ); ");
-            dbPath.append("\nINSERTING VALUES");
-//            db.execSQL("insert into tb_values ("
-//                    + " value_one, " + " value_two, " + " value_three) values ("
-//                    + "'TEST'" + "'TEST'" + "'TEST');");
-            db.close();
-            dbPath.append("\nAll Done");
+            this.myDBName = "myAccValues";
+            this.myDBPath = storagePath + "/" + myDBName;
+            dbPath.append("\nDB path: " + myDBPath);
+            try {
+                db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+                db.execSQL("DROP table IF EXISTS [tb_values];");
+                db.execSQL("create table tb_values ("
+                        + " recId integer Primary Key autoincrement, "
+                        + " value_one text, "
+                        + " value_two text, "
+                        + " value_three text ); ");
+                db.close();
+                dbPath.append("\nAll Done");
 
-        } catch (SQLiteException e) {
-            dbPath.setText("\nERROR " + e.getMessage());
+            } catch (SQLiteException e) {
+                dbPath.setText("\nERROR " + e.getMessage());
+            }
+        } else {
+            dbPath.setText("Sorry couldn't save db");
         }
 
         //button work
         moveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                myDBPath = externalSDStoragePath + "/" + myDBName;
-                dbPath.append("\nDB path: " + myDBPath);
+                db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+                dbPath.append("\nINSERTING VALUES");
                 try {
-                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-                    db.execSQL("DROP table IF EXISTS [tb_values];");
-                    db.execSQL("create table tb_values ("
-                            + " recId integer Primary Key autoincrement, "
-                            + " value_one text, "
-                            + " value_two text, "
-                            + " value_three text ); ");
-                    dbPath.append("\nINSERTING VALUES");
-//                    db.execSQL("insert into tb_values ("
-//                            + " value_one, " + " value_two, " + " value_three) values ("
-//                            + "'TEST'" + "'TEST'" + "'TEST');");
+                    db.execSQL("insert into tb_values ("
+                            + " value_one, " + " value_two, " + " value_three) values ("
+                            + "'TEST'" + "'TEST'" + "'TEST');");
                     db.close();
                     dbPath.append("\nAll Done");
-
                 } catch (SQLiteException e) {
-                    dbPath.setText("\nERROR " + e.getMessage());
+                    dbPath.setText("\n"+myDBPath+"\nERROR " + e.getMessage());
                 }
             }
         });
         delBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                myDBPath = storagePath + "/" + myDBName;
-                dbPath.append("\nDB path: " + myDBPath);
-                try {
-                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-                    db.execSQL("DROP table IF EXISTS [tb_values];");
-                    db.execSQL("create table tb_values ("
-                            + " recId integer Primary Key autoincrement, "
-                            + " value_one text, "
-                            + " value_two text, "
-                            + " value_three text ); ");
-                    dbPath.append("\nINSERTING VALUES");
-//                    db.execSQL("insert into tb_values ("
-//                            + " value_one, " + " value_two, " + " value_three) values ("
-//                            + "'TEST'" + "'TEST'" + "'TEST');");
-                    db.close();
-                    dbPath.append("\nAll Done");
 
-                } catch (SQLiteException e) {
-                    dbPath.setText("\nERROR " + e.getMessage());
-                }
             }
         });
         copyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                myDBPath = externalStoragePath + "/" + myDBName;
-                dbPath.append("\nDB path: " + myDBPath);
-                try {
-                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-                    db.execSQL("DROP table IF EXISTS [tb_values];");
-                    db.execSQL("create table tb_values ("
-                            + " recId integer Primary Key autoincrement, "
-                            + " value_one text, "
-                            + " value_two text, "
-                            + " value_three text ); ");
-                    dbPath.append("\nINSERTING VALUES");
-//            db.execSQL("insert into tb_values ("
-//                    + " value_one, " + " value_two, " + " value_three) values ("
-//                    + "'TEST'" + "'TEST'" + "'TEST');");
-                    db.close();
-                    dbPath.append("\nAll Done");
 
-                } catch (SQLiteException e) {
-                    dbPath.setText("\nERROR " + e.getMessage());
-                }
             }
         });
 
