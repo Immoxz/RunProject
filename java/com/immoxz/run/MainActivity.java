@@ -86,24 +86,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             this.myDBName = "myAccValues";
             this.myDBPath = storagePath + "/" + myDBName;
             dbPath.append("\nDB path: " + myDBPath);
-            try {
-                db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-                db.execSQL("create table tb_values ("
-                        + " recId integer Primary Key autoincrement, "
-                        + " value_one text, "
-                        + " value_two text, "
-                        + " value_three text ); ");
-                db.execSQL("create table tb_max_values ("
-                        + " recId integer Primary Key autoincrement, "
-                        + " value_one text, "
-                        + " value_two text, "
-                        + " value_three text ); ");
-                db.close();
-                dbPath.append("\nAll Done");
+            do {
+                try {
+                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+                    db.execSQL("create table tb_values ("
+                            + " recId integer Primary Key autoincrement, "
+                            + " value_one text, "
+                            + " value_two text, "
+                            + " value_three text ); ");
+                    db.execSQL("create table tb_max_values ("
+                            + " recId integer Primary Key autoincrement, "
+                            + " value_one text, "
+                            + " value_two text, "
+                            + " value_three text ); ");
+                    db.close();
+                    dbPath.append("\nAll Done");
+                    status = true;
 
-            } catch (SQLiteException e) {
-                dbPath.setText("\nERROR " + e.getMessage());
-            }
+                } catch (SQLiteException e) {
+                    dbPath.setText("\nERROR " + e.getMessage());
+                    status = false;
+                }
+            }while (status);
         } else {
             dbPath.setText("Sorry couldn't save db");
         }
@@ -137,6 +141,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             + " value_one text, "
                             + " value_two text, "
                             + " value_three text ); ");
+                    db.execSQL("DROP TABLE IF EXISTS tb_max_values;");
+                    db.execSQL("create table tb_max_values ("
+                            + " recId integer Primary Key autoincrement, "
+                            + " value_one text, "
+                            + " value_two text, "
+                            + " value_three text ); ");
                     db.close();
                     status = true;
                 } catch (SQLiteException e) {
@@ -148,14 +158,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         copyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String countQuery = "SELECT * FROM tb_values";
                 try {
                     db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-                    dbPath.setText("number of gatherd values: "+db.rawQuery("select COUNT(*) from tb_values;",null));
+                    Cursor cursor = db.rawQuery(countQuery, null);
+                    int cnt = cursor.getCount();
+                    cursor.close();
+                    dbPath.setText("number of gatherd values: " + cnt);
                     Cursor c1 = db.rawQuery("select * from tb_max_values;", null);
                     c1.moveToPosition(-1);
                     while (c1.moveToNext()) {
-                        dbPath.append(c1.getInt(0) + " | " + c1.getString(1) + " | " + c1.getString(2) + " | " + c1.getString(3) + "\n");
+                        dbPath.append("\n"+c1.getInt(0) + " | " + c1.getString(1) + " | " + c1.getString(2) + " | " + c1.getString(3) );
                     }
+                    c1.close();
                     db.close();
                 } catch (SQLiteException e) {
                     dbPath.setText("\nERROR " + e.getMessage());
