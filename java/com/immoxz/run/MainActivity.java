@@ -186,6 +186,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 max_acceleration[2] = values[2];
             }
             accMaxValueView.setText(max_acceleration[0] + " " + max_acceleration[1] + " " + max_acceleration[2]);
+            db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+            try {
+                db.execSQL("insert into tb_values ("
+                        + " value_one, " + " value_two, " + " value_three) values ("
+                        + "'"+max_acceleration[0]+"'," + "'"+max_acceleration[1]+"'," + "'"+max_acceleration[2]+"');");
+                db.close();
+            } catch (SQLiteException e) {
+                dbPath.setText("\nERROR " + e.getMessage());
+            }
         }
     }
 
