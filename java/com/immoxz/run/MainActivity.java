@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private File storagePath;
     private String myDBPath;
     private String myDBName;
-    private boolean status = true;
+    private boolean status = false;
 
     //File Manager
     FileManager fileManager = new FileManager();
@@ -85,8 +85,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             this.myDBName = "myAccValues";
             this.myDBPath = storagePath + "/" + myDBName;
-            dbPath.append("\nDB path: " + myDBPath);
-            do {
+            while (!status){
                 try {
                     db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
                     db.execSQL("create table tb_values ("
@@ -100,14 +99,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             + " value_two text, "
                             + " value_three text ); ");
                     db.close();
-                    dbPath.append("\nAll Done");
                     status = true;
-
+                    dbPath.setText("\nDB path: " + myDBPath);
+                    dbPath.append("\nAll Done");
                 } catch (SQLiteException e) {
                     dbPath.setText("\nERROR " + e.getMessage());
-                    status = false;
+                    if (e.getMessage().contains("Sqlite code 1")){
+                        status = true;
+                        dbPath.setText("\nDB path: " + myDBPath);
+                        dbPath.append("\nAll Done");
+                    }else {
+                        status = false;
+                    }
                 }
-            }while (status);
+            }
         } else {
             dbPath.setText("Sorry couldn't save db");
         }
@@ -119,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
                 dbPath.append("\nINSERTING VALUES");
                 try {
-                    db.execSQL("insert into tb_values ("
+                    db.execSQL("insert into tb_max_values ("
                             + " value_one, " + " value_two, " + " value_three) values ("
                             + "'0'," + "'0'," + "'0');");
                     db.close();
