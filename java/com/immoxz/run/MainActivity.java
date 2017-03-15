@@ -1,6 +1,7 @@
 package com.immoxz.run;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.hardware.Sensor;
@@ -87,7 +88,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             dbPath.append("\nDB path: " + myDBPath);
             try {
                 db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-                db.execSQL("DROP table IF EXISTS [tb_values];");
                 db.execSQL("create table tb_values ("
                         + " recId integer Primary Key autoincrement, "
                         + " value_one text, "
@@ -112,21 +112,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 try {
                     db.execSQL("insert into tb_values ("
                             + " value_one, " + " value_two, " + " value_three) values ("
-                            + "'TEST'" + "'TEST'" + "'TEST');");
-                    db.close();
+                            + "'TEST'," + "'TEST'," + "'TEST');");
+
                     dbPath.append("\nAll Done");
                 } catch (SQLiteException e) {
-                    dbPath.setText("\n"+myDBPath+"\nERROR " + e.getMessage());
+                    dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
                 }
             }
         });
         delBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                try {
+                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+                    Cursor c1 = db.rawQuery("select * from tb_values;", null);
+                    c1.moveToPosition(-1);
+                    while (c1.moveToNext()) {
+                        int recId = c1.getInt(0);
+                        String name = c1.getString(1);
+                        dbPath.append(recId + " | " + name);
+                    }
+                } catch (SQLiteException e) {
+                    dbPath.setText("\nERROR " + e.getMessage());
+                }
 
             }
         });
-        copyBtn.setOnClickListener(new View.OnClickListener() {
+        copyBtn.setOnClickListener(new View.OnClickListener()
+
+        {
             @Override
             public void onClick(View v) {
 
@@ -180,17 +194,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        try {
+
+            db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+        } catch (SQLiteException e) {
+            dbPath.setText("\nERROR " + e.getMessage());
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
+        try {
+            db.close();
+        } catch (SQLiteException e) {
+            dbPath.setText("\nERROR " + e.getMessage());
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        try {
+            db.close();
+        } catch (SQLiteException e) {
+            dbPath.setText("\nERROR " + e.getMessage());
+        }
     }
 
 

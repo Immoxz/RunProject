@@ -28,14 +28,9 @@
         android:layout_below="@+id/accValues"
         android:layout_marginBottom="10dp"
         android:id="@+id/accMaxValues" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/accMaxValues"
-        android:layout_marginBottom="10dp"
-        android:id="@+id/dbPath" />
     <LinearLayout
-        android:layout_below="@+id/dbPath"
+        android:id="@+id/btnLinear"
+        android:layout_below="@+id/accMaxValues"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         <Button
@@ -55,5 +50,12 @@
             android:layout_height="wrap_content"
             android:text="@string/copyFile"/>
     </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnLinear"
+        android:layout_marginBottom="10dp"
+        android:id="@+id/dbPath" />
 
 </RelativeLayout>
