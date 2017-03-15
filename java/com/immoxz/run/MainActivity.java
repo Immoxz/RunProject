@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private TextView accSensorNameView;
     private TextView accValueView;
     private TextView accMaxValueView;
-
     private Button moveBtn;
     private Button delBtn;
     private Button copyBtn;
@@ -42,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private File storagePath;
     private String myDBPath;
     private String myDBName;
+    private boolean status = true;
 
     //File Manager
     FileManager fileManager = new FileManager();
@@ -93,6 +93,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         + " value_one text, "
                         + " value_two text, "
                         + " value_three text ); ");
+                db.execSQL("create table tb_max_values ("
+                        + " recId integer Primary Key autoincrement, "
+                        + " value_one text, "
+                        + " value_two text, "
+                        + " value_three text ); ");
                 db.close();
                 dbPath.append("\nAll Done");
 
@@ -112,8 +117,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 try {
                     db.execSQL("insert into tb_values ("
                             + " value_one, " + " value_two, " + " value_three) values ("
-                            + "'TEST'," + "'TEST'," + "'TEST');");
-
+                            + "'0'," + "'0'," + "'0');");
+                    db.close();
                     dbPath.append("\nAll Done");
                 } catch (SQLiteException e) {
                     dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
@@ -124,25 +129,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onClick(View v) {
                 try {
+                    status = false;
                     db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-                    Cursor c1 = db.rawQuery("select * from tb_values;", null);
-                    c1.moveToPosition(-1);
-                    while (c1.moveToNext()) {
-                        int recId = c1.getInt(0);
-                        String name = c1.getString(1);
-                        dbPath.append(recId + " | " + name);
-                    }
+                    db.execSQL("DROP TABLE IF EXISTS tb_values;");
+                    db.execSQL("create table tb_values ("
+                            + " recId integer Primary Key autoincrement, "
+                            + " value_one text, "
+                            + " value_two text, "
+                            + " value_three text ); ");
+                    db.close();
+                    status = true;
                 } catch (SQLiteException e) {
                     dbPath.setText("\nERROR " + e.getMessage());
                 }
 
             }
         });
-        copyBtn.setOnClickListener(new View.OnClickListener()
-
-        {
+        copyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                try {
+                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+                    dbPath.setText("number of gatherd values: "+db.rawQuery("select COUNT(*) from tb_values;",null));
+                    Cursor c1 = db.rawQuery("select * from tb_max_values;", null);
+                    c1.moveToPosition(-1);
+                    while (c1.moveToNext()) {
+                        dbPath.append(c1.getInt(0) + " | " + c1.getString(1) + " | " + c1.getString(2) + " | " + c1.getString(3) + "\n");
+                    }
+                    db.close();
+                } catch (SQLiteException e) {
+                    dbPath.setText("\nERROR " + e.getMessage());
+                }
+
 
             }
         });
@@ -156,9 +174,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
-        // In this example, alpha is calculated as t / (t + dT),
-        // where t is the low-pass filter's time-constant and
-        // dT is the event delivery rate.
+// In this example, alpha is calculated as t / (t + dT),
+// where t is the low-pass filter's time-constant and
+// dT is the event delivery rate.
         final float alpha = 0.8f;
 
         // Isolate the force of gravity with the low-pass filter.
@@ -171,6 +189,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         linear_acceleration[1] = event.values[1] - gravity[1];
         linear_acceleration[2] = event.values[2] - gravity[2];
         accValueView.setText(linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2]);
+        if (status) {
+            db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+            try {
+                db.execSQL("insert into tb_values ("
+                        + " value_one, " + " value_two, " + " value_three) values ("
+                        + "'" + linear_acceleration[0] + "'," + "'" + linear_acceleration[1] + "'," + "'" + linear_acceleration[2] + "');");
+                db.close();
+            } catch (SQLiteException e) {
+                dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
+            }
+        }
         setAccMaxValue(linear_acceleration);
     }
 
@@ -178,23 +207,47 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (values.length != 0) {
             if (max_acceleration[0] <= values[0]) {
                 max_acceleration[0] = values[0];
+                if (status) {
+                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+                    try {
+                        db.execSQL("insert into tb_max_values ("
+                                + " value_one, " + " value_two, " + " value_three) values ("
+                                + "'" + max_acceleration[0] + "'," + "'" + max_acceleration[1] + "'," + "'" + max_acceleration[2] + "');");
+                        db.close();
+                    } catch (SQLiteException e) {
+                        dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
+                    }
+                }
             }
             if (max_acceleration[1] <= values[1]) {
                 max_acceleration[1] = values[1];
+                if (status) {
+                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+                    try {
+                        db.execSQL("insert into tb_max_values ("
+                                + " value_one, " + " value_two, " + " value_three) values ("
+                                + "'" + max_acceleration[0] + "'," + "'" + max_acceleration[1] + "'," + "'" + max_acceleration[2] + "');");
+                        db.close();
+                    } catch (SQLiteException e) {
+                        dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
+                    }
+                }
             }
             if (max_acceleration[2] <= values[2]) {
                 max_acceleration[2] = values[2];
+                if (status) {
+                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+                    try {
+                        db.execSQL("insert into tb_max_values ("
+                                + " value_one, " + " value_two, " + " value_three) values ("
+                                + "'" + max_acceleration[0] + "'," + "'" + max_acceleration[1] + "'," + "'" + max_acceleration[2] + "');");
+                        db.close();
+                    } catch (SQLiteException e) {
+                        dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
+                    }
+                }
             }
             accMaxValueView.setText(max_acceleration[0] + " " + max_acceleration[1] + " " + max_acceleration[2]);
-            db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-            try {
-                db.execSQL("insert into tb_values ("
-                        + " value_one, " + " value_two, " + " value_three) values ("
-                        + "'"+max_acceleration[0]+"'," + "'"+max_acceleration[1]+"'," + "'"+max_acceleration[2]+"');");
-                db.close();
-            } catch (SQLiteException e) {
-                dbPath.setText("\nERROR " + e.getMessage());
-            }
         }
     }
 
@@ -204,7 +257,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onResume();
         mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
         try {
-
             db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
         } catch (SQLiteException e) {
             dbPath.setText("\nERROR " + e.getMessage());
@@ -225,6 +277,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mSensorManager.unregisterListener(this);
         try {
             db.close();
         } catch (SQLiteException e) {
