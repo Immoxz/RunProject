@@ -45,8 +45,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     //File Manager
     FileManager fileManager = new FileManager();
-    private String externalStoragePath;
-    private String externalSDStoragePath;
 
 
     @Override
