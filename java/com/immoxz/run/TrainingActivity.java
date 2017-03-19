@@ -10,17 +10,13 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import java.io.File;
-
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class TrainingActivity extends AppCompatActivity implements SensorEventListener {
     private SensorManager mSensorManager;
     private Sensor accSensor;
     private TriggerEventListener mTriggerEventListener;
@@ -51,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_training);
 
         //sensors things
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -165,9 +161,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
-// In this example, alpha is calculated as t / (t + dT),
-// where t is the low-pass filter's time-constant and
-// dT is the event delivery rate.
+        // In this example, alpha is calculated as t / (t + dT),
+        // where t is the low-pass filter's time-constant and
+        // dT is the event delivery rate.
         final float alpha = 0.8f;
 
         // Isolate the force of gravity with the low-pass filter.
