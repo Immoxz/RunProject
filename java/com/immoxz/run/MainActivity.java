@@ -39,15 +39,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     //sqlLite database
     SQLiteDatabase db;
     private TextView dbPath;
-    private File storagePath;
-    private String myDBPath;
-    private String myDBName;
-    private boolean status = false;
-    DataBaseManager dataBaseManager = new DataBaseManager();
+    private String storagePath;
+    private String[] tableNames;
+    private DataBaseManager dataBaseManager = new DataBaseManager();
+    private boolean startInserting_run = false;
 
     //File Manager
     FileManager fileManager = new FileManager();
-
 
 
     @Override
@@ -82,8 +80,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
-            //dataBaseManager.SetDefaultAccTables();
-            dbPath.setText("\nDB path: " + myDBPath);
+            dataBaseManager.SetDefaultAccTables();
+            this.tableNames = dataBaseManager.getAccTablesNames();
+            this.storagePath = dataBaseManager.getDbPath();
+            dbPath.setText("\nDB path: " + storagePath);
             dbPath.append("\nAll Done");
         } else {
             dbPath.setText("Sorry couldn't save db");
@@ -99,20 +99,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         delBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    dataBaseManager.DropAllAccTables();
+                dataBaseManager.DropAllAccTables();
             }
         });
         copyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String countQuery = "SELECT * FROM acc_values_walk_10";
+                String countQuery = "SELECT * FROM " + tableNames[0] + ";";
                 try {
                     db = dataBaseManager.getDb();
                     Cursor cursor = db.rawQuery(countQuery, null);
                     int cnt = cursor.getCount();
                     cursor.close();
                     dbPath.setText("number of gatherd values: " + cnt);
-                    Cursor c1 = db.rawQuery("select * from acc_values_walk_full;", null);
+                    Cursor c1 = db.rawQuery("select * from "+tableNames[3]+";", null);
                     c1.moveToPosition(-1);
                     while (c1.moveToNext()) {
                         dbPath.append("\n" + c1.getInt(0) + " | " + c1.getString(1) + " | " + c1.getString(2) + " | " + c1.getString(3));
@@ -128,92 +128,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
     }
-
-
-    @Override
-    public final void onSensorChanged(SensorEvent event) {
-// In this example, alpha is calculated as t / (t + dT),
-// where t is the low-pass filter's time-constant and
-// dT is the event delivery rate.
-        final float alpha = 0.8f;
-
-        // Isolate the force of gravity with the low-pass filter.
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-
-        // Remove the gravity contribution with the high-pass filter.
-        linear_acceleration[0] = event.values[0] - gravity[0];
-        linear_acceleration[1] = event.values[1] - gravity[1];
-        linear_acceleration[2] = event.values[2] - gravity[2];
-        accValueView.setText(linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2]);
-//        if (status) {
-//            db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-//            try {
-//                db.execSQL("insert into tb_values ("
-//                        + " value_one, " + " value_two, " + " value_three) values ("
-//                        + "'" + linear_acceleration[0] + "'," + "'" + linear_acceleration[1] + "'," + "'" + linear_acceleration[2] + "');");
-//                db.close();
-//            } catch (SQLiteException e) {
-//                dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
-//            }
-//        }
-        setAccMaxValue(linear_acceleration);
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
-
-    void setAccMaxValue(float[] values) {
-        if (values.length != 0) {
-            if (max_acceleration[0] <= values[0]) {
-                max_acceleration[0] = values[0];
-//                if (status) {
-//                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-//                    try {
-//                        db.execSQL("insert into tb_max_values ("
-//                                + " value_one, " + " value_two, " + " value_three) values ("
-//                                + "'" + max_acceleration[0] + "'," + "'" + max_acceleration[1] + "'," + "'" + max_acceleration[2] + "');");
-//                        db.close();
-//                    } catch (SQLiteException e) {
-//                        dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
-//                    }
-//                }
-            }
-            if (max_acceleration[1] <= values[1]) {
-                max_acceleration[1] = values[1];
-//                if (status) {
-//                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-//                    try {
-//                        db.execSQL("insert into tb_max_values ("
-//                                + " value_one, " + " value_two, " + " value_three) values ("
-//                                + "'" + max_acceleration[0] + "'," + "'" + max_acceleration[1] + "'," + "'" + max_acceleration[2] + "');");
-//                        db.close();
-//                    } catch (SQLiteException e) {
-//                        dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
-//                    }
-//                }
-            }
-            if (max_acceleration[2] <= values[2]) {
-                max_acceleration[2] = values[2];
-//                if (status) {
-//                    db = SQLiteDatabase.openDatabase(myDBPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-//                    try {
-//                        db.execSQL("insert into tb_max_values ("
-//                                + " value_one, " + " value_two, " + " value_three) values ("
-//                                + "'" + max_acceleration[0] + "'," + "'" + max_acceleration[1] + "'," + "'" + max_acceleration[2] + "');");
-//                        db.close();
-//                    } catch (SQLiteException e) {
-//                        dbPath.setText("\n" + myDBPath + "\nERROR " + e.getMessage());
-//                    }
-//                }
-            }
-            accMaxValueView.setText(max_acceleration[0] + " " + max_acceleration[1] + " " + max_acceleration[2]);
-        }
-    }
-
 
     @Override
     protected void onResume() {
@@ -247,6 +161,53 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             dbPath.setText("\nERROR " + e.getMessage());
         }
     }
+
+
+    @Override
+    public final void onSensorChanged(SensorEvent event) {
+// In this example, alpha is calculated as t / (t + dT),
+// where t is the low-pass filter's time-constant and
+// dT is the event delivery rate.
+        final float alpha = 0.8f;
+
+        // Isolate the force of gravity with the low-pass filter.
+        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+
+        // Remove the gravity contribution with the high-pass filter.
+        linear_acceleration[0] = event.values[0] - gravity[0];
+        linear_acceleration[1] = event.values[1] - gravity[1];
+        linear_acceleration[2] = event.values[2] - gravity[2];
+        accValueView.setText(linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2]);
+        //if (startInserting_run)
+        dataBaseManager.InsertToAccTable(tableNames[0], linear_acceleration);
+        setAccMaxValue(linear_acceleration);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    private void setAccMaxValue(float[] values) {
+        if (values.length != 0) {
+            if (max_acceleration[0] <= values[0]) {
+                max_acceleration[0] = values[0];
+                dataBaseManager.InsertToAccTable(tableNames[3], max_acceleration);
+            }
+            if (max_acceleration[1] <= values[1]) {
+                max_acceleration[1] = values[1];
+                dataBaseManager.InsertToAccTable(tableNames[3], max_acceleration);
+            }
+            if (max_acceleration[2] <= values[2]) {
+                max_acceleration[2] = values[2];
+                dataBaseManager.InsertToAccTable(tableNames[3], max_acceleration);
+            }
+            accMaxValueView.setText(max_acceleration[0] + " " + max_acceleration[1] + " " + max_acceleration[2]);
+        }
+    }
+
 
 
 }

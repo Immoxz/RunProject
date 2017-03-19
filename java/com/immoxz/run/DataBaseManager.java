@@ -66,7 +66,6 @@ public class DataBaseManager extends AppCompatActivity {
 
     public SQLiteDatabase getDb() {
         boolean status = true;
-        while (status) {
             try {
                 db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
                 status = false;
@@ -75,7 +74,6 @@ public class DataBaseManager extends AppCompatActivity {
                 System.out.println("WARN not able to create db");
                 status = true;
             }
-        }
         return db;
     }
 
@@ -109,6 +107,7 @@ public class DataBaseManager extends AppCompatActivity {
             }
         }
     }
+
     public void DropAllAccTables() {
         boolean status = true;
         int i = 0;
@@ -123,7 +122,7 @@ public class DataBaseManager extends AppCompatActivity {
                 db.close();
                 status = false;
             } catch (SQLiteException e) {
-                Log.d("ERROR", e.getMessage());
+                Log.e("ERROR", e.getMessage());
                 if (e.getMessage().contains("Sqlite code 1")) {
                     status = true;
                     i++;
@@ -133,6 +132,26 @@ public class DataBaseManager extends AppCompatActivity {
                 }
             }
         }
+    }
+    public void InsertToAccTable(String tableName,float[] datas){
+        boolean status = true;
+        while (status) {
+            try {
+                db = getDb();
+                db.execSQL("insert into "+tableName+" ("
+                        + " x_axis, " + " y_axis, " + " z_axis) values ("
+                        + "'" + datas[0] + "'," + "'" + datas[1] + "'," + "'" + datas[2] + "');");
+                db.close();
+                status = false;
+            } catch (SQLiteException e) {
+                Log.e("ERROR", e.getMessage());
+            }
+        }
+
+    }
+
+    public static String[] getAccTablesNames() {
+        return ACC_TABLES_NAMES;
     }
 }
 
