@@ -16,8 +16,6 @@ import java.io.File;
 
 public class DataBaseManager extends AppCompatActivity {
     //class variables
-    private Context context = getApplicationContext();
-    private int duration = Toast.LENGTH_SHORT;
     private SQLiteDatabase db;
 
     //define defoult Tables names
@@ -35,7 +33,7 @@ public class DataBaseManager extends AppCompatActivity {
     //setting default values
     private String dbName = "RunDB";
     private File externalStorage = Environment.getExternalStorageDirectory().getAbsoluteFile();
-    private File internalStorage = getApplication().getFilesDir();
+    private File internalStorage = Environment.getDataDirectory().getAbsoluteFile();
     private String dbPath = externalStorage + "/" + dbName; //TODO: change default storage later on.
 
     //File Manager
@@ -55,7 +53,6 @@ public class DataBaseManager extends AppCompatActivity {
             if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
                 this.dbPath = externalStorage + "/" + dbName;
             } else {
-                Toast.makeText(context, "Sorry external storage not available", duration).show();
                 this.dbPath = internalStorage + "/" + dbName;
             }
         } else {
@@ -74,7 +71,7 @@ public class DataBaseManager extends AppCompatActivity {
                 db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
                 status = false;
             } catch (SQLiteException e) {
-                Log.d("WARN", "not able to create db");
+                Log.e("WARN", "not able to create db");
                 System.out.println("WARN not able to create db");
                 status = true;
             }
@@ -82,36 +79,57 @@ public class DataBaseManager extends AppCompatActivity {
         return db;
     }
 
-    public void SetDefoultAccTables() {
+    public void SetDefaultAccTables() {
         boolean status = true;
-        boolean iterator = false;
         int i = 0;
         while (status) {
             try {
                 db = getDb();
-                iterator = true;
                 while (i < ACC_TABLES_NAMES.length) {
                     db.execSQL("create table " + ACC_TABLES_NAMES[i] + " ("
                             + " recId integer Primary Key autoincrement, "
                             + " x_axis DOUBLE, "
                             + " y_axis DOUBLE, "
                             + " z_axis DOUBLE ); ");
+                    Log.d("DONE", "create table " + ACC_TABLES_NAMES[i]);
+                    i++;
                 }
-                i++;
-                iterator = false;
                 db.close();
-                status = true;
-                Log.d("done", "create table " + ACC_TABLES_NAMES[i - 1]);
-                System.out.println("WARN not able to create db");
+                status = false;
+            } catch (SQLiteException e) {
+                Log.e("ERROR", e.getMessage());
+                if (e.getMessage().contains("Sqlite code 1")) {
+                    status = true;
+                    Log.e("ERROR", "table existed: " + ACC_TABLES_NAMES[i]);
+                    i++;
+                } else {
+                    status = false;
+                    i--;
+                }
+            }
+        }
+    }
+    public void DropAllAccTables() {
+        boolean status = true;
+        int i = 0;
+        while (status) {
+            try {
+                db = getDb();
+                while (i < ACC_TABLES_NAMES.length) {
+                    db.execSQL("DROP TABLE IF EXISTS "+ACC_TABLES_NAMES[i]+";");
+                    Log.d("done", "table " + ACC_TABLES_NAMES[i]+" droped");
+                    i++;
+                }
+                db.close();
+                status = false;
             } catch (SQLiteException e) {
                 Log.d("ERROR", e.getMessage());
                 if (e.getMessage().contains("Sqlite code 1")) {
                     status = true;
-                    Log.d("ERROR", "table existed: " + ACC_TABLES_NAMES[i - 1]);
+                    i++;
                 } else {
                     status = false;
-                    if (iterator)
-                        i--;
+                    i--;
                 }
             }
         }

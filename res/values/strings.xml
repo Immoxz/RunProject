@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Run</string>
-    <string name="moveFile">insert 0ros</string>
-    <string name="delFile">recreate tab</string>
+    <string name="moveFile">create tables</string>
+    <string name="delFile">Delete tabs</string>
     <string name="copyFile">select all</string>
 </resources>
