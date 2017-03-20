@@ -13,13 +13,12 @@ public class HelloScreen extends AppCompatActivity {
     private Button btnTrain, btnStat, btnHist;
 
 
-    private final Intent trainIntent = new Intent(this, TrainingActivity.class);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hello_screen);
-
+        final Intent trainIntent = new Intent(this, TrainingActivity.class);
         //setiing buttons
         btnTrain = (Button) findViewById(R.id.btnTrain);
         btnStat = (Button) findViewById(R.id.btnStat);
