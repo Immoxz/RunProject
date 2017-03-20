@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Run</string>
-    <string name="moveFile">create tables</string>
-    <string name="delFile">Delete tabs</string>
+    <string name="moveFile">create</string>
+    <string name="delFile">Delete</string>
     <string name="copyFile">select all</string>
+    <string name="training">Training</string>
+    <string name="statistics">Statistics</string>
+    <string name="history">History</string>
 </resources>
