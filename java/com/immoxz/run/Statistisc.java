@@ -63,5 +63,18 @@ public class Statistisc extends AppCompatActivity {
                 }
             }
         });
+        btnDelTables.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                flushDatabase();
+            }
+        });
+    }
+
+    private void flushDatabase() {
+        if (tableNames.length != 0) {
+            dataBaseManager.DropAllAccTables();
+            dataBaseManager.SetDefaultAccTables();
+        }
     }
 }

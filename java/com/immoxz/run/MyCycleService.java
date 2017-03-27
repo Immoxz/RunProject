@@ -82,7 +82,6 @@ public class MyCycleService extends Service implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         // grab the values and timestamp -- off the main thread
         new SensorEventLoggerTask().execute(event);
-        // stop the service
     }
 
     private class SensorEventLoggerTask extends
