@@ -22,7 +22,7 @@
         <activity android:name=".Statistisc" />
 
         <service
-            android:name=".MyFistService"
+            android:name=".MyRunService"
             android:enabled="true"
             android:exported="true"></service>
     </application>

@@ -1,6 +1,7 @@
 package com.immoxz.run;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -53,6 +54,8 @@ public class TrainingActivity extends AppCompatActivity implements SensorEventLi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_training);
+        //test
+        final Intent runServiceIntent = new Intent(this, MyRunService.class);
 
         //sensors things
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -91,8 +94,9 @@ public class TrainingActivity extends AppCompatActivity implements SensorEventLi
         btnWalk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startInserting_walk = true;
-                startInserting_run = startInserting_cycle = false;
+                //startInserting_walk = true;
+                //startInserting_run = startInserting_cycle = false;
+                startService(runServiceIntent);
             }
         });
         btnRun.setOnClickListener(new View.OnClickListener() {
@@ -112,7 +116,21 @@ public class TrainingActivity extends AppCompatActivity implements SensorEventLi
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                String workingTableName = tableNames[0];
                 startInserting_walk = startInserting_run = startInserting_cycle = false;
+                String countQuery = "SELECT * FROM " + workingTableName + ";";
+                try {
+                    db = dataBaseManager.getDb();
+                    Cursor cursor = db.rawQuery(countQuery, null);
+                    int cnt = cursor.getCount();
+                    cursor.close();
+                    dbPath.setText("number of gatherd values: " + cnt);
+                    db.close();
+                } catch (SQLiteException e) {
+                    dbPath.setText("\nERROR " + e.getMessage());
+                }
+                stopService(runServiceIntent);
             }
         });
 
