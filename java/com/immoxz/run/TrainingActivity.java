@@ -19,13 +19,13 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-public class TrainingActivity extends AppCompatActivity implements SensorEventListener {
+public class TrainingActivity extends AppCompatActivity {//implements SensorEventListener {
     // Get the Intent that started this activity and extract the string
 //    Intent intent = getIntent();
 //    String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
 
-    private SensorManager mSensorManager;
-    private Sensor accSensor;
+//    private SensorManager mSensorManager;
+//    private Sensor accSensor;
     private TriggerEventListener mTriggerEventListener;
     private TextView accValueView;
     private ImageButton btnWalk, btnRun, btnCycle;
@@ -58,9 +58,9 @@ public class TrainingActivity extends AppCompatActivity implements SensorEventLi
         final Intent runServiceIntent = new Intent(this, MyRunService.class);
 
         //sensors things
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+//        accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+//        mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
         //List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
         //things on xml
         accValueView = (TextView) findViewById(R.id.accValues);
@@ -78,7 +78,7 @@ public class TrainingActivity extends AppCompatActivity implements SensorEventLi
             }
         };
 
-        mSensorManager.requestTriggerSensor(mTriggerEventListener, accSensor);
+//        mSensorManager.requestTriggerSensor(mTriggerEventListener, accSensor);
 
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
             dataBaseManager.SetDefaultAccTables();
@@ -139,7 +139,7 @@ public class TrainingActivity extends AppCompatActivity implements SensorEventLi
     @Override
     protected void onResume() {
         super.onResume();
-        mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//        mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
         try {
             this.db = dataBaseManager.getDb();
         } catch (SQLiteException e) {
@@ -150,7 +150,7 @@ public class TrainingActivity extends AppCompatActivity implements SensorEventLi
     @Override
     protected void onPause() {
         super.onPause();
-        mSensorManager.unregisterListener(this);
+//        mSensorManager.unregisterListener(this);
         try {
             db.close();
         } catch (SQLiteException e) {
@@ -161,7 +161,7 @@ public class TrainingActivity extends AppCompatActivity implements SensorEventLi
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mSensorManager.unregisterListener(this);
+//        mSensorManager.unregisterListener(this);
         try {
             db.close();
         } catch (SQLiteException e) {
@@ -170,59 +170,59 @@ public class TrainingActivity extends AppCompatActivity implements SensorEventLi
     }
 
 
-    @Override
-    public final void onSensorChanged(SensorEvent event) {
-        // In this example, alpha is calculated as t / (t + dT),
-        // where t is the low-pass filter's time-constant and
-        // dT is the event delivery rate.
-        final float alpha = 0.8f;
-        String workingTableName = "";
-
-        // Isolate the force of gravity with the low-pass filter.
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-
-        // Remove the gravity contribution with the high-pass filter.
-        linear_acceleration[0] = event.values[0] - gravity[0];
-        linear_acceleration[1] = event.values[1] - gravity[1];
-        linear_acceleration[2] = event.values[2] - gravity[2];
-        accValueView.setText(linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2]);
-        if (startInserting_walk) {
-            dataBaseManager.InsertToAccTable(tableNames[0], linear_acceleration);
-            workingTableName = tableNames[0];
-        }
-        if (startInserting_run) {
-            dataBaseManager.InsertToAccTable(tableNames[1], linear_acceleration);
-            workingTableName = tableNames[1];
-        }
-        if (startInserting_cycle) {
-            dataBaseManager.InsertToAccTable(tableNames[2], linear_acceleration);
-            workingTableName = tableNames[2];
-        }
-
-        //updating info
-        if (!workingTableName.isEmpty()) {
-            String countQuery = "SELECT * FROM " + workingTableName + ";";
-            try {
-                db = dataBaseManager.getDb();
-                Cursor cursor = db.rawQuery(countQuery, null);
-                int cnt = cursor.getCount();
-                cursor.close();
-                dbPath.setText("number of gatherd values: " + cnt);
-                db.close();
-            } catch (SQLiteException e) {
-                dbPath.setText("\nERROR " + e.getMessage());
-            }
-        }
-        //set maxis
-        setAccMaxValue(linear_acceleration);
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
+//    @Override
+//    public final void onSensorChanged(SensorEvent event) {
+//        // In this example, alpha is calculated as t / (t + dT),
+//        // where t is the low-pass filter's time-constant and
+//        // dT is the event delivery rate.
+//        final float alpha = 0.8f;
+//        String workingTableName = "";
+//
+//        // Isolate the force of gravity with the low-pass filter.
+//        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+//        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+//        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+//
+//        // Remove the gravity contribution with the high-pass filter.
+//        linear_acceleration[0] = event.values[0] - gravity[0];
+//        linear_acceleration[1] = event.values[1] - gravity[1];
+//        linear_acceleration[2] = event.values[2] - gravity[2];
+//        accValueView.setText(linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2]);
+//        if (startInserting_walk) {
+//            dataBaseManager.InsertToAccTable(tableNames[0], linear_acceleration);
+//            workingTableName = tableNames[0];
+//        }
+//        if (startInserting_run) {
+//            dataBaseManager.InsertToAccTable(tableNames[1], linear_acceleration);
+//            workingTableName = tableNames[1];
+//        }
+//        if (startInserting_cycle) {
+//            dataBaseManager.InsertToAccTable(tableNames[2], linear_acceleration);
+//            workingTableName = tableNames[2];
+//        }
+//
+//        //updating info
+//        if (!workingTableName.isEmpty()) {
+//            String countQuery = "SELECT * FROM " + workingTableName + ";";
+//            try {
+//                db = dataBaseManager.getDb();
+//                Cursor cursor = db.rawQuery(countQuery, null);
+//                int cnt = cursor.getCount();
+//                cursor.close();
+//                dbPath.setText("number of gatherd values: " + cnt);
+//                db.close();
+//            } catch (SQLiteException e) {
+//                dbPath.setText("\nERROR " + e.getMessage());
+//            }
+//        }
+//        //set maxis
+//        setAccMaxValue(linear_acceleration);
+//    }
+//
+//    @Override
+//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+//
+//    }
 
     private void setAccMaxValue(float[] values) {
         if (values.length != 0) {
