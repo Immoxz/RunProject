@@ -6,4 +6,6 @@
     <string name="training">Training</string>
     <string name="statistics">Statistics</string>
     <string name="history">History</string>
+    <string name="delete_all_tables">Delete All Tables</string>
+    <string name="show_stats">Show Stats</string>
 </resources>

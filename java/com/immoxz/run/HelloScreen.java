@@ -19,6 +19,7 @@ public class HelloScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hello_screen);
         final Intent trainIntent = new Intent(this, TrainingActivity.class);
+        final Intent statsIntent = new Intent(this, Statistisc.class);
         //setiing buttons
         btnTrain = (Button) findViewById(R.id.btnTrain);
         btnStat = (Button) findViewById(R.id.btnStat);
@@ -37,7 +38,7 @@ public class HelloScreen extends AppCompatActivity {
         btnStat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                startActivity(statsIntent);
             }
         });
         btnHist.setOnClickListener(new View.OnClickListener() {

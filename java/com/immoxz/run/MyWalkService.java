@@ -19,7 +19,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-public class MyRunService extends Service implements SensorEventListener {
+public class MyWalkService extends Service implements SensorEventListener {
 
 //    public MyRunService() {
 //        super("MainService");
@@ -38,7 +38,7 @@ public class MyRunService extends Service implements SensorEventListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(this, "Run Service Started", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Walk Service Started", Toast.LENGTH_LONG).show();
         //sensors things
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -52,8 +52,8 @@ public class MyRunService extends Service implements SensorEventListener {
         }
 
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        Intent bIntent = new Intent(MyRunService.this, TrainingActivity.class);
-        PendingIntent pbIntent = PendingIntent.getActivity(MyRunService.this, 0, bIntent, 0);
+        Intent bIntent = new Intent(MyWalkService.this, TrainingActivity.class);
+        PendingIntent pbIntent = PendingIntent.getActivity(MyWalkService.this, 0, bIntent, 0);
         NotificationCompat.Builder bBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.mipmap.run)
@@ -109,7 +109,7 @@ public class MyRunService extends Service implements SensorEventListener {
             linear_acceleration[0] = event.values[0] - gravity[0];
             linear_acceleration[1] = event.values[1] - gravity[1];
             linear_acceleration[2] = event.values[2] - gravity[2];
-            dataBaseManager.InsertToAccTable(tableNames[4], linear_acceleration);
+            dataBaseManager.InsertToAccTable(tableNames[3], linear_acceleration);
             //setAccMaxValue(linear_acceleration);
             return null;
         }

@@ -57,6 +57,10 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
         //test
         final Intent runServiceIntent = new Intent(this, MyRunService.class);
 
+        final Intent walkServiceIntent = new Intent(this, MyWalkService.class);
+
+        final Intent cycleServiceIntent = new Intent(this, MyCycleService.class);
+
         //sensors things
 //        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 //        accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -96,21 +100,23 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
             public void onClick(View v) {
                 //startInserting_walk = true;
                 //startInserting_run = startInserting_cycle = false;
-                startService(runServiceIntent);
+                startService(walkServiceIntent);
             }
         });
         btnRun.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startInserting_run = true;
-                startInserting_walk = startInserting_cycle = false;
+//                startInserting_run = true;
+//                startInserting_walk = startInserting_cycle = false;
+                startService(runServiceIntent);
             }
         });
         btnCycle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startInserting_cycle = true;
-                startInserting_walk = startInserting_run = false;
+//                startInserting_cycle = true;
+//                startInserting_walk = startInserting_run = false;
+                startService(cycleServiceIntent);
             }
         });
         btnStop.setOnClickListener(new View.OnClickListener() {
@@ -118,7 +124,7 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
             public void onClick(View v) {
 
                 String workingTableName = tableNames[0];
-                startInserting_walk = startInserting_run = startInserting_cycle = false;
+//                startInserting_walk = startInserting_run = startInserting_cycle = false;
                 String countQuery = "SELECT * FROM " + workingTableName + ";";
                 try {
                     db = dataBaseManager.getDb();
@@ -131,6 +137,8 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
                     dbPath.setText("\nERROR " + e.getMessage());
                 }
                 stopService(runServiceIntent);
+                stopService(walkServiceIntent);
+                stopService(cycleServiceIntent);
             }
         });
 
