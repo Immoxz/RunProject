@@ -1,5 +1,6 @@
 package com.immoxz.run;
 
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -19,22 +20,20 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-public class TrainingActivity extends AppCompatActivity {//implements SensorEventListener {
-    // Get the Intent that started this activity and extract the string
+public class TrainingActivity extends AppCompatActivity {
+    //     Get the Intent that started this activity and extract the string
 //    Intent intent = getIntent();
 //    String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
-
-//    private SensorManager mSensorManager;
-//    private Sensor accSensor;
+//
     private TriggerEventListener mTriggerEventListener;
     private TextView accValueView;
     private ImageButton btnWalk, btnRun, btnCycle;
     private Button btnStop;
 
-    //creating values for accuracy
-    private float[] gravity = new float[3];
-    private float[] linear_acceleration = new float[3];
-    private float[] max_acceleration = new float[3];
+    //service references
+    Intent runServiceIntent = null;
+    Intent walkServiceIntent = null;
+    Intent cycleServiceIntent = null;
 
     //sqlLite database
     SQLiteDatabase db;
@@ -42,30 +41,19 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
     private String storagePath;
     private String[] tableNames;
     private DataBaseManager dataBaseManager = new DataBaseManager();
-    private boolean startInserting_walk = false;
-    private boolean startInserting_run = false;
-    private boolean startInserting_cycle = false;
 
     //File Manager
     FileManager fileManager = new FileManager();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_training);
-        //test
-        final Intent runServiceIntent = new Intent(this, MyRunService.class);
+        //initial intets for services
+        runServiceIntent = new Intent(this, MyRunService.class);
+        walkServiceIntent = new Intent(this, MyWalkService.class);
+        cycleServiceIntent = new Intent(this, MyCycleService.class);
 
-        final Intent walkServiceIntent = new Intent(this, MyWalkService.class);
-
-        final Intent cycleServiceIntent = new Intent(this, MyCycleService.class);
-
-        //sensors things
-//        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-//        accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-//        mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        //List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
         //things on xml
         accValueView = (TextView) findViewById(R.id.accValues);
         btnWalk = (ImageButton) findViewById(R.id.btnWalk);
@@ -82,7 +70,6 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
             }
         };
 
-//        mSensorManager.requestTriggerSensor(mTriggerEventListener, accSensor);
 
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
             dataBaseManager.SetDefaultAccTables();
@@ -98,44 +85,24 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
         btnWalk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //startInserting_walk = true;
-                //startInserting_run = startInserting_cycle = false;
                 startService(walkServiceIntent);
             }
         });
         btnRun.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                startInserting_run = true;
-//                startInserting_walk = startInserting_cycle = false;
                 startService(runServiceIntent);
             }
         });
         btnCycle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                startInserting_cycle = true;
-//                startInserting_walk = startInserting_run = false;
                 startService(cycleServiceIntent);
             }
         });
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                String workingTableName = tableNames[0];
-//                startInserting_walk = startInserting_run = startInserting_cycle = false;
-                String countQuery = "SELECT * FROM " + workingTableName + ";";
-                try {
-                    db = dataBaseManager.getDb();
-                    Cursor cursor = db.rawQuery(countQuery, null);
-                    int cnt = cursor.getCount();
-                    cursor.close();
-                    dbPath.setText("number of gatherd values: " + cnt);
-                    db.close();
-                } catch (SQLiteException e) {
-                    dbPath.setText("\nERROR " + e.getMessage());
-                }
                 stopService(runServiceIntent);
                 stopService(walkServiceIntent);
                 stopService(cycleServiceIntent);
@@ -147,7 +114,6 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
     @Override
     protected void onResume() {
         super.onResume();
-//        mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
         try {
             this.db = dataBaseManager.getDb();
         } catch (SQLiteException e) {
@@ -158,7 +124,6 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
     @Override
     protected void onPause() {
         super.onPause();
-//        mSensorManager.unregisterListener(this);
         try {
             db.close();
         } catch (SQLiteException e) {
@@ -169,84 +134,11 @@ public class TrainingActivity extends AppCompatActivity {//implements SensorEven
     @Override
     protected void onDestroy() {
         super.onDestroy();
-//        mSensorManager.unregisterListener(this);
         try {
             db.close();
         } catch (SQLiteException e) {
             Log.e("Error", "unable to close cb");
         }
     }
-
-
-//    @Override
-//    public final void onSensorChanged(SensorEvent event) {
-//        // In this example, alpha is calculated as t / (t + dT),
-//        // where t is the low-pass filter's time-constant and
-//        // dT is the event delivery rate.
-//        final float alpha = 0.8f;
-//        String workingTableName = "";
-//
-//        // Isolate the force of gravity with the low-pass filter.
-//        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-//        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-//        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-//
-//        // Remove the gravity contribution with the high-pass filter.
-//        linear_acceleration[0] = event.values[0] - gravity[0];
-//        linear_acceleration[1] = event.values[1] - gravity[1];
-//        linear_acceleration[2] = event.values[2] - gravity[2];
-//        accValueView.setText(linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2]);
-//        if (startInserting_walk) {
-//            dataBaseManager.InsertToAccTable(tableNames[0], linear_acceleration);
-//            workingTableName = tableNames[0];
-//        }
-//        if (startInserting_run) {
-//            dataBaseManager.InsertToAccTable(tableNames[1], linear_acceleration);
-//            workingTableName = tableNames[1];
-//        }
-//        if (startInserting_cycle) {
-//            dataBaseManager.InsertToAccTable(tableNames[2], linear_acceleration);
-//            workingTableName = tableNames[2];
-//        }
-//
-//        //updating info
-//        if (!workingTableName.isEmpty()) {
-//            String countQuery = "SELECT * FROM " + workingTableName + ";";
-//            try {
-//                db = dataBaseManager.getDb();
-//                Cursor cursor = db.rawQuery(countQuery, null);
-//                int cnt = cursor.getCount();
-//                cursor.close();
-//                dbPath.setText("number of gatherd values: " + cnt);
-//                db.close();
-//            } catch (SQLiteException e) {
-//                dbPath.setText("\nERROR " + e.getMessage());
-//            }
-//        }
-//        //set maxis
-//        setAccMaxValue(linear_acceleration);
-//    }
-//
-//    @Override
-//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-//
-//    }
-
-    private void setAccMaxValue(float[] values) {
-        if (values.length != 0) {
-            if (max_acceleration[0] <= values[0]) {
-                max_acceleration[0] = values[0];
-            }
-            if (max_acceleration[1] <= values[1]) {
-                max_acceleration[1] = values[1];
-            }
-            if (max_acceleration[2] <= values[2]) {
-                max_acceleration[2] = values[2];
-            }
-            //accMaxValueView.setText(max_acceleration[0] + " " + max_acceleration[1] + " " + max_acceleration[2]);
-        }
-    }
-
-
 }
 

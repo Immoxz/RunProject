@@ -12,8 +12,6 @@ import android.widget.TextView;
 
 public class Statistisc extends AppCompatActivity {
     SQLiteDatabase db;
-    private TextView dbPath;
-    private String storagePath;
     private String[] tableNames;
     private DataBaseManager dataBaseManager = new DataBaseManager();
 
@@ -58,7 +56,7 @@ public class Statistisc extends AppCompatActivity {
                         }
                         db.close();
                     } catch (SQLiteException e) {
-                        dbPath.setText("\nERROR " + e.getMessage());
+                        statsResult.setText("\nERROR " + e.getMessage());
                     }
                 }
             }

@@ -1,5 +1,6 @@
 package com.immoxz.run;
 
+import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -19,11 +20,11 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-public class MyRunService extends Service implements SensorEventListener {
+public class MyRunService extends IntentService implements SensorEventListener {
 
-//    public MyRunService() {
-//        super("MainService");
-//    }
+    public MyRunService() {
+        super("MainService");
+    }
 
     private SensorManager mSensorManager;
     private Sensor accSensor;
@@ -68,15 +69,6 @@ public class MyRunService extends Service implements SensorEventListener {
         return Service.START_STICKY;
     }
 
-//
-//    @Override
-//    protected void onHandleIntent(@Nullable Intent intent) {
-//        try {
-//            Thread.sleep(5000);
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
-//    }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -92,6 +84,7 @@ public class MyRunService extends Service implements SensorEventListener {
         //creating values for accuracy
         private float[] gravity = new float[3];
         private float[] linear_acceleration = new float[3];
+
         @Override
         protected Void doInBackground(SensorEvent... events) {
             SensorEvent event = events[0];
@@ -121,7 +114,6 @@ public class MyRunService extends Service implements SensorEventListener {
     }
 
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -138,5 +130,10 @@ public class MyRunService extends Service implements SensorEventListener {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    protected void onHandleIntent(@Nullable Intent intent) {
+
     }
 }

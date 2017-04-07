@@ -1,5 +1,6 @@
 package com.immoxz.run;
 
+import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -19,7 +20,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-public class MyWalkService extends Service implements SensorEventListener {
+public class MyWalkService extends IntentService implements SensorEventListener {
 
 //    public MyRunService() {
 //        super("MainService");
@@ -34,6 +35,10 @@ public class MyWalkService extends Service implements SensorEventListener {
 
     //File Manager
     FileManager fileManager = new FileManager();
+
+    public MyWalkService() {
+        super("MyWalkService");
+    }
 
 
     @Override
@@ -125,7 +130,7 @@ public class MyWalkService extends Service implements SensorEventListener {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Toast.makeText(this, "Run Service Stopped", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Walk Service Stopped", Toast.LENGTH_LONG).show();
         mSensorManager.unregisterListener(this);
         try {
             db.close();
@@ -138,5 +143,10 @@ public class MyWalkService extends Service implements SensorEventListener {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    protected void onHandleIntent(@Nullable Intent intent) {
+
     }
 }

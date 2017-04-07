@@ -1,5 +1,6 @@
 package com.immoxz.run;
 
+import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -19,11 +20,11 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-public class MyCycleService extends Service implements SensorEventListener {
+public class MyCycleService extends IntentService implements SensorEventListener {
 
-//    public MyRunService() {
-//        super("MainService");
-//    }
+    public MyCycleService() {
+        super("MainService");
+    }
 
     private SensorManager mSensorManager;
     private Sensor accSensor;
@@ -68,15 +69,8 @@ public class MyCycleService extends Service implements SensorEventListener {
         return Service.START_STICKY;
     }
 
-//
-//    @Override
-//    protected void onHandleIntent(@Nullable Intent intent) {
-//        try {
-//            Thread.sleep(5000);
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
-//    }
+
+
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -137,5 +131,10 @@ public class MyCycleService extends Service implements SensorEventListener {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    protected void onHandleIntent(@Nullable Intent intent) {
+        
     }
 }

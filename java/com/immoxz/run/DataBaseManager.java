@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteException;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+
 import java.io.File;
 
 /**
@@ -21,11 +22,17 @@ public class DataBaseManager extends AppCompatActivity {
     private static final String ACC_VAL_RUN_10SEC = "acc_values_run_10";
     private static final String ACC_VAL_BICYCLE_10SEC = "acc_values_bicycle_10";
     //tables gathering whole data
-    private static final String ACC_VAL_WALK_WALK = "acc_values_walk_full";
+    private static final String ACC_VAL_WALK_FULL = "acc_values_walk_full";
     private static final String ACC_VAL_RUN_FULL = "acc_values_run_full";
     private static final String ACC_VAL_BICYCLE_FULL = "acc_values_bicycle_full";
+    //vectors
+    private static final String ACC_VAL_WALK_VECTOR = "acc_values_walk_vector";
+    private static final String ACC_VAL_RUN_VECTOR = "acc_values_run_vector";
+    private static final String ACC_VAL_BICYCLE_VECTOR = "acc_values_bicycle_vector";
     //ALL tables
-    public static final String[] ACC_TABLES_NAMES = {ACC_VAL_WALK_10SEC, ACC_VAL_RUN_10SEC, ACC_VAL_BICYCLE_10SEC, ACC_VAL_WALK_WALK, ACC_VAL_RUN_FULL, ACC_VAL_BICYCLE_FULL};
+    public static final String[] ACC_TABLES_NAMES = {ACC_VAL_WALK_10SEC, ACC_VAL_RUN_10SEC, ACC_VAL_BICYCLE_10SEC, ACC_VAL_WALK_FULL,
+            ACC_VAL_RUN_FULL, ACC_VAL_BICYCLE_FULL, ACC_VAL_WALK_VECTOR, ACC_VAL_RUN_VECTOR, ACC_VAL_BICYCLE_VECTOR};
+    public static final String[] ACC_VECTORS_TABLES_NAMES = {ACC_VAL_WALK_VECTOR, ACC_VAL_RUN_VECTOR, ACC_VAL_BICYCLE_VECTOR};
 
     //setting default values
     private String dbName = "RunDB";
@@ -62,15 +69,12 @@ public class DataBaseManager extends AppCompatActivity {
     }
 
     public SQLiteDatabase getDb() {
-        boolean status = true;
-            try {
-                db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
-                status = false;
-            } catch (SQLiteException e) {
-                Log.e("WARN", "not able to create db");
-                System.out.println("WARN not able to create db");
-                status = true;
-            }
+        try {
+            db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+        } catch (SQLiteException e) {
+            Log.e("WARN", "not able to create db");
+            System.out.println("WARN not able to create db");
+        }
         return db;
     }
 
@@ -87,6 +91,13 @@ public class DataBaseManager extends AppCompatActivity {
                             + " y_axis DOUBLE, "
                             + " z_axis DOUBLE ); ");
                     Log.d("DONE", "create table " + ACC_TABLES_NAMES[i]);
+                    i++;
+                }
+                while(i<ACC_VECTORS_TABLES_NAMES.length){
+                    db.execSQL("create table " + ACC_VECTORS_TABLES_NAMES[i] + " ("
+                            + " recId integer Primary Key autoincrement, "
+                            + " vec DOUBLE ); ");
+                    Log.d("DONE", "create table " + ACC_VECTORS_TABLES_NAMES[i]);
                     i++;
                 }
                 db.close();
@@ -112,8 +123,13 @@ public class DataBaseManager extends AppCompatActivity {
             try {
                 db = getDb();
                 while (i < ACC_TABLES_NAMES.length) {
-                    db.execSQL("DROP TABLE IF EXISTS "+ACC_TABLES_NAMES[i]+";");
-                    Log.d("done", "table " + ACC_TABLES_NAMES[i]+" droped");
+                    db.execSQL("DROP TABLE IF EXISTS " + ACC_TABLES_NAMES[i] + ";");
+                    Log.d("done", "table " + ACC_TABLES_NAMES[i] + " dropped");
+                    i++;
+                }
+                while (i < ACC_VECTORS_TABLES_NAMES.length) {
+                    db.execSQL("DROP TABLE IF EXISTS " + ACC_VECTORS_TABLES_NAMES[i] + ";");
+                    Log.d("done", "table " + ACC_VECTORS_TABLES_NAMES[i] + " dropped");
                     i++;
                 }
                 db.close();
@@ -130,12 +146,13 @@ public class DataBaseManager extends AppCompatActivity {
             }
         }
     }
-    public void InsertToAccTable(String tableName,float[] datas){
+
+    public void InsertToAccTable(String tableName, float[] datas) {
         boolean status = true;
         while (status) {
             try {
                 db = getDb();
-                db.execSQL("insert into "+tableName+" ("
+                db.execSQL("insert into " + tableName + " ("
                         + " x_axis, " + " y_axis, " + " z_axis) values ("
                         + "'" + datas[0] + "'," + "'" + datas[1] + "'," + "'" + datas[2] + "');");
                 db.close();
