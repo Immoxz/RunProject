@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteException;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.hardware.SensorListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.IBinder;
@@ -20,14 +21,20 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-public class MyRunService extends IntentService implements SensorEventListener {
+public class MyRunService extends IntentService implements SensorEventListener, SensorListener {
 
     public MyRunService() {
-        super("MainService");
+        super("MyRunService");
     }
 
     private SensorManager mSensorManager;
     private Sensor accSensor;
+    private boolean accBoolSensor = false;
+    private Sensor gyroscopSensor;
+    private boolean gyroscopeBoolSensor = false;
+    private Sensor lightSensor;
+    private boolean lightBoolSensor = false;
+
 
     SQLiteDatabase db;
     private String[] tableNames;
@@ -42,12 +49,35 @@ public class MyRunService extends IntentService implements SensorEventListener {
         Toast.makeText(this, "Run Service Started", Toast.LENGTH_LONG).show();
         //sensors things
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
+            accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            accBoolSensor = true;
+        } else {
+            Log.e("ERROR", "there is no accelerometer");
+        }
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
+            gyroscopSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            gyroscopeBoolSensor = true;
+        } else {
+            Log.e("ERROR", "there is no gravity sensor");
+        }
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null) {
+            lightSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+            lightBoolSensor = true;
+        } else {
+            Log.e("ERROR", "there is no light sensor");
+        }
+        //register all sensors
+        if (accBoolSensor)
+            mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if (gyroscopeBoolSensor)
+            mSensorManager.registerListener(this, gyroscopSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if (lightBoolSensor)
+            mSensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
         //here u should make your service foreground so it will keep working even if app closed
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
             dataBaseManager.SetDefaultAccTables();
-            this.tableNames = dataBaseManager.getAccTablesNames();
+            this.tableNames = DataBaseManager.getAccTablesNames();
         } else {
             Log.e("ERROR", "db not available");
         }
@@ -59,7 +89,7 @@ public class MyRunService extends IntentService implements SensorEventListener {
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.mipmap.run)
                         .setContentTitle("RunSensor")
-                        .setContentText("Subtitle TEST")
+                        .setContentText("Service to gather your run properties")
                         .setAutoCancel(true)
                         .setOngoing(true)
                         .setContentIntent(pbIntent);
@@ -72,12 +102,28 @@ public class MyRunService extends IntentService implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        // grab the values and timestamp -- off the main thread
-        new SensorEventLoggerTask().execute(event);
+        Sensor sensor = event.sensor;
+        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            new SensorEventLoggerTaskAccelerometer().execute(event);
+        } else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            new SensorEventLoggerTaskGyroscope().execute(event);
+        } else if (sensor.getType() == Sensor.TYPE_LIGHT) {
+            //TODO: get values
+        }
         // stop the service
     }
 
-    private class SensorEventLoggerTask extends
+    @Override
+    public void onSensorChanged(int i, float[] floats) {
+
+    }
+
+    @Override
+    public void onAccuracyChanged(int i, int i1) {
+
+    }
+
+    private class SensorEventLoggerTaskAccelerometer extends
             AsyncTask<SensorEvent, Object, Void> {
 
         private DataBaseManager dataBaseManager = new DataBaseManager();
@@ -108,6 +154,60 @@ public class MyRunService extends IntentService implements SensorEventListener {
         }
     }
 
+
+    private class SensorEventLoggerTaskGyroscope extends
+            AsyncTask<SensorEvent, Object, Void> {
+
+        private DataBaseManager dataBaseManager = new DataBaseManager();
+        public static final float EPSILON = 0.000000001f;
+        private static final float NS2S = 1.0f / 1000000000.0f;
+        private final float[] deltaRotationVector = new float[4];
+        private float timestamp;
+
+
+        @Override
+        protected Void doInBackground(SensorEvent... events) {
+            SensorEvent event = events[0];
+            // This timestep's delta rotation to be multiplied by the current rotation
+            // after computing it from the gyro sample data.
+            if (timestamp != 0) {
+                final float dT = (event.timestamp - timestamp) * NS2S;
+                // Axis of the rotation sample, not normalized yet.
+                float axisX = event.values[0];
+                float axisY = event.values[1];
+                float axisZ = event.values[2];
+
+                // Calculate the angular speed of the sample
+                float omegaMagnitude = (float) Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
+
+                // Normalize the rotation vector if it's big enough to get the axis
+                // (that is, EPSILON should represent your maximum allowable margin of error)
+                if (omegaMagnitude > EPSILON) {
+                    axisX /= omegaMagnitude;
+                    axisY /= omegaMagnitude;
+                    axisZ /= omegaMagnitude;
+                }
+
+                // Integrate around this axis with the angular speed by the timestep
+                // in order to get a delta rotation from this sample over the timestep
+                // We will convert this axis-angle representation of the delta rotation
+                // into a quaternion before turning it into the rotation matrix.
+                float thetaOverTwo = omegaMagnitude * dT / 2.0f;
+                float sinThetaOverTwo = (float) Math.sin(thetaOverTwo);
+                float cosThetaOverTwo = (float) Math.cos(thetaOverTwo);
+                deltaRotationVector[0] = sinThetaOverTwo * axisX;
+                deltaRotationVector[1] = sinThetaOverTwo * axisY;
+                deltaRotationVector[2] = sinThetaOverTwo * axisZ;
+                //deltaRotationVector[3] = cosThetaOverTwo;
+                //TODO:SKONCZYC POMYSLEC O CI JAK i tak nie działa na moim urzadzeniu.
+            }
+            timestamp = event.timestamp;
+            dataBaseManager.InsertToAccTable(tableNames[1], deltaRotationVector);
+            //setAccMaxValue(linear_acceleration);
+            return null;
+        }
+    }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
@@ -117,8 +217,7 @@ public class MyRunService extends IntentService implements SensorEventListener {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Toast.makeText(this, "Run Service Stopped", Toast.LENGTH_LONG).show();
-        mSensorManager.unregisterListener(this);
+        mSensorManager.unregisterListener((SensorEventListener) this);
         try {
             db.close();
         } catch (SQLiteException e) {

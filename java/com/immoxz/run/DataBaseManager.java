@@ -17,31 +17,34 @@ public class DataBaseManager extends AppCompatActivity {
     private SQLiteDatabase db;
 
     //define defoult Tables names
-    //tables for gather 10 sec informations
-    private static final String ACC_VAL_WALK_10SEC = "acc_values_walk_10";
-    private static final String ACC_VAL_RUN_10SEC = "acc_values_run_10";
-    private static final String ACC_VAL_BICYCLE_10SEC = "acc_values_bicycle_10";
-    //tables gathering whole data
-    private static final String ACC_VAL_WALK_FULL = "acc_values_walk_full";
-    private static final String ACC_VAL_RUN_FULL = "acc_values_run_full";
-    private static final String ACC_VAL_BICYCLE_FULL = "acc_values_bicycle_full";
-    //vectors
-    private static final String ACC_VAL_WALK_VECTOR = "acc_values_walk_vector";
-    private static final String ACC_VAL_RUN_VECTOR = "acc_values_run_vector";
-    private static final String ACC_VAL_BICYCLE_VECTOR = "acc_values_bicycle_vector";
+    //tables for STAND
+    private static final String TAB_STAND_10 = "stand_values_10";
+    private static final String TAB_STAND = "stand_values";
+    //tables SIT
+    private static final String TAB_SIT_10 = "sit_values_10";
+    private static final String TAB_SIT = "sit_values";
+    //tables WALK
+    private static final String TAB_WALK_10 = "walk_values_10";
+    private static final String TAB_WALK = "walk_values";
+    //tables RUN
+    private static final String TAB_RUN_10 = "run_values_10";
+    private static final String TAB_RUN = "run_values";
+    //tables CYCLE
+    private static final String TAB_CYCLE_10 = "bicycle_values_10";
+    private static final String TAB_CYCLE = "bicycle_values";
     //ALL tables
-    public static final String[] ACC_TABLES_NAMES = {ACC_VAL_WALK_10SEC, ACC_VAL_RUN_10SEC, ACC_VAL_BICYCLE_10SEC, ACC_VAL_WALK_FULL,
-            ACC_VAL_RUN_FULL, ACC_VAL_BICYCLE_FULL, ACC_VAL_WALK_VECTOR, ACC_VAL_RUN_VECTOR, ACC_VAL_BICYCLE_VECTOR};
-    public static final String[] ACC_VECTORS_TABLES_NAMES = {ACC_VAL_WALK_VECTOR, ACC_VAL_RUN_VECTOR, ACC_VAL_BICYCLE_VECTOR};
+    public static final String[] ALL_TABLES_NAMES = {TAB_STAND_10, TAB_STAND, TAB_SIT_10, TAB_SIT,
+            TAB_WALK_10, TAB_WALK, TAB_RUN_10, TAB_RUN, TAB_CYCLE_10, TAB_CYCLE};
 
     //setting default values
-    private String dbName = "RunDB";
+    private String dbName = "TestRunDB";
     private File externalStorage = Environment.getExternalStorageDirectory().getAbsoluteFile();
     private File internalStorage = Environment.getDataDirectory().getAbsoluteFile();
     private String dbPath = externalStorage + "/" + dbName; //TODO: change default storage later on.
 
     //File Manager
     FileManager fileManager = new FileManager();
+
 
     public void setDbName(String dbName) {
         this.dbName = dbName;
@@ -84,20 +87,19 @@ public class DataBaseManager extends AppCompatActivity {
         while (status) {
             try {
                 db = getDb();
-                while (i < ACC_TABLES_NAMES.length) {
-                    db.execSQL("create table " + ACC_TABLES_NAMES[i] + " ("
+                while (i < ALL_TABLES_NAMES.length) {
+                    db.execSQL("create table " + ALL_TABLES_NAMES[i] + " ("
                             + " recId integer Primary Key autoincrement, "
-                            + " x_axis DOUBLE, "
-                            + " y_axis DOUBLE, "
-                            + " z_axis DOUBLE ); ");
-                    Log.d("DONE", "create table " + ACC_TABLES_NAMES[i]);
-                    i++;
-                }
-                while(i<ACC_VECTORS_TABLES_NAMES.length){
-                    db.execSQL("create table " + ACC_VECTORS_TABLES_NAMES[i] + " ("
-                            + " recId integer Primary Key autoincrement, "
-                            + " vec DOUBLE ); ");
-                    Log.d("DONE", "create table " + ACC_VECTORS_TABLES_NAMES[i]);
+                            + " acc_x_axis DOUBLE, "
+                            + " acc_y_axis DOUBLE, "
+                            + " acc_z_axis DOUBLE, "
+                            + " gyro_deltaRotationVector_x_axis DOUBLE, "
+                            + " gyro_deltaRotationVector_y_axis DOUBLE, "
+                            + " gyro_deltaRotationVector_z_axis DOUBLE, "
+                            + " gyro_deltaRotationVector_t_axis DOUBLE, "
+                            + " light_sensor DOUBLE, "
+                            + " jack_plugged DOUBLE ); ");
+                    Log.d("DONE", "create table " + ALL_TABLES_NAMES[i]);
                     i++;
                 }
                 db.close();
@@ -106,7 +108,7 @@ public class DataBaseManager extends AppCompatActivity {
                 Log.e("ERROR", e.getMessage());
                 if (e.getMessage().contains("Sqlite code 1")) {
                     status = true;
-                    Log.e("ERROR", "table existed: " + ACC_TABLES_NAMES[i]);
+                    Log.e("ERROR", "table existed: " + ALL_TABLES_NAMES[i]);
                     i++;
                 } else {
                     status = false;
@@ -122,14 +124,9 @@ public class DataBaseManager extends AppCompatActivity {
         while (status) {
             try {
                 db = getDb();
-                while (i < ACC_TABLES_NAMES.length) {
-                    db.execSQL("DROP TABLE IF EXISTS " + ACC_TABLES_NAMES[i] + ";");
-                    Log.d("done", "table " + ACC_TABLES_NAMES[i] + " dropped");
-                    i++;
-                }
-                while (i < ACC_VECTORS_TABLES_NAMES.length) {
-                    db.execSQL("DROP TABLE IF EXISTS " + ACC_VECTORS_TABLES_NAMES[i] + ";");
-                    Log.d("done", "table " + ACC_VECTORS_TABLES_NAMES[i] + " dropped");
+                while (i < ALL_TABLES_NAMES.length) {
+                    db.execSQL("DROP TABLE IF EXISTS " + ALL_TABLES_NAMES[i] + ";");
+                    Log.d("done", "table " + ALL_TABLES_NAMES[i] + " dropped");
                     i++;
                 }
                 db.close();
@@ -153,8 +150,25 @@ public class DataBaseManager extends AppCompatActivity {
             try {
                 db = getDb();
                 db.execSQL("insert into " + tableName + " ("
-                        + " x_axis, " + " y_axis, " + " z_axis) values ("
-                        + "'" + datas[0] + "'," + "'" + datas[1] + "'," + "'" + datas[2] + "');");
+                        + " acc_x_axis, "
+                        + " acc_y_axis, "
+                        + " acc_z_axis, "
+                        + " gyro_deltaRotationVector_x_axis, "
+                        + " gyro_deltaRotationVector_y_axis, "
+                        + " gyro_deltaRotationVector_z_axis, "
+                        + " gyro_deltaRotationVector_t_axis, "
+                        + " light_sensor, "
+                        + " jack_plugged ) "
+                        + " values ( "
+                        + datas[0] + " , "
+                        + datas[1] + " , "
+                        + datas[2] + " , "
+                        + datas[3] + " , "
+                        + datas[4] + " , "
+                        + datas[5] + " , "
+                        + datas[6] + " , "
+                        + datas[7] + " , "
+                        + datas[8] + " );");
                 db.close();
                 status = false;
             } catch (SQLiteException e) {
@@ -165,7 +179,7 @@ public class DataBaseManager extends AppCompatActivity {
     }
 
     public static String[] getAccTablesNames() {
-        return ACC_TABLES_NAMES;
+        return ALL_TABLES_NAMES;
     }
 }
 

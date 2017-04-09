@@ -1,15 +1,8 @@
 package com.immoxz.run;
 
-import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
 import android.support.v7.app.AppCompatActivity;
@@ -31,6 +24,7 @@ public class TrainingActivity extends AppCompatActivity {
     private Button btnStop;
 
     //service references
+    Intent serviceIntent = null;
     Intent runServiceIntent = null;
     Intent walkServiceIntent = null;
     Intent cycleServiceIntent = null;
@@ -50,7 +44,8 @@ public class TrainingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_training);
         //initial intets for services
-        runServiceIntent = new Intent(this, MyRunService.class);
+        //runServiceIntent = new Intent(this, MyRunService.class);
+        serviceIntent = new Intent(this, ActivityGenericService.class);
         walkServiceIntent = new Intent(this, MyWalkService.class);
         cycleServiceIntent = new Intent(this, MyCycleService.class);
 
@@ -73,7 +68,7 @@ public class TrainingActivity extends AppCompatActivity {
 
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
             dataBaseManager.SetDefaultAccTables();
-            this.tableNames = dataBaseManager.getAccTablesNames();
+            this.tableNames = DataBaseManager.getAccTablesNames();
             this.storagePath = dataBaseManager.getDbPath();
             dbPath.setText("\nDB path: " + storagePath);
             dbPath.append("\nAll Done");
@@ -85,27 +80,35 @@ public class TrainingActivity extends AppCompatActivity {
         btnWalk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startService(walkServiceIntent);
+                stopService(serviceIntent);
+                serviceIntent.putExtra("tabNum", 4);
+                serviceIntent.putExtra("serviceName", "Walk");
+                startService(serviceIntent);
+                //startService(walkServiceIntent);
             }
         });
         btnRun.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startService(runServiceIntent);
+                stopService(serviceIntent);
+                serviceIntent.putExtra("tabNum", 6);
+                serviceIntent.putExtra("serviceName", "Run");
+                startService(serviceIntent);
             }
         });
         btnCycle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startService(cycleServiceIntent);
+                stopService(serviceIntent);
+                serviceIntent.putExtra("tabNum", 8);
+                serviceIntent.putExtra("serviceName", "Cycle");
+                startService(serviceIntent);
             }
         });
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopService(runServiceIntent);
-                stopService(walkServiceIntent);
-                stopService(cycleServiceIntent);
+                stopService(serviceIntent);
             }
         });
 
