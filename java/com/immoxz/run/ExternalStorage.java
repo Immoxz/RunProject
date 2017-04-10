@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-/**
- * Created by ImmoXZ on 2017-03-14.
- */
 
 public class ExternalStorage {
     public static final String SD_CARD = "sdCard";
@@ -22,10 +19,7 @@ public class ExternalStorage {
      */
     public static boolean isAvailable() {
         String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            return true;
-        }
-        return false;
+        return Environment.MEDIA_MOUNTED.equals(state) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
     }
 
     public static String getSdCardPath() {
@@ -37,10 +31,7 @@ public class ExternalStorage {
      */
     public static boolean isWritable() {
         String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
+        return Environment.MEDIA_MOUNTED.equals(state);
 
     }
 

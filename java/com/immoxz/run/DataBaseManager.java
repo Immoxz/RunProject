@@ -37,7 +37,7 @@ public class DataBaseManager extends AppCompatActivity {
             TAB_WALK_10, TAB_WALK, TAB_RUN_10, TAB_RUN, TAB_CYCLE_10, TAB_CYCLE};
 
     //setting default values
-    private String dbName = "TestRunDB";
+    private String dbName = "RunDB";
     private File externalStorage = Environment.getExternalStorageDirectory().getAbsoluteFile();
     private File internalStorage = Environment.getDataDirectory().getAbsoluteFile();
     private String dbPath = externalStorage + "/" + dbName; //TODO: change default storage later on.

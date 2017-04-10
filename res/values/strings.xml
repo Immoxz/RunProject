@@ -8,4 +8,7 @@
     <string name="history">History</string>
     <string name="delete_all_tables">Delete All Tables</string>
     <string name="show_stats">Show Stats</string>
+    <string name="db_not_found">Sorry couldn\'t get db</string>
+    <string name="db_path">\nDB path: </string>
+    <string name="error">\nERROR </string>
 </resources>

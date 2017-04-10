@@ -7,7 +7,6 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -23,8 +22,6 @@ import java.util.List;
 
 public class ActivityGenericService extends IntentService implements SensorEventListener {
 
-    //sensors
-    private SensorManager mSensorManager;
     private Sensor accSensor;
     private boolean accBoolSensor = false;
     private Sensor gyroscopeSensor;
@@ -32,8 +29,7 @@ public class ActivityGenericService extends IntentService implements SensorEvent
     private Sensor lightSensor;
     private boolean lightBoolSensor = false;
 
-    //database
-    private SQLiteDatabase db;
+    //  database
     private String[] tableNames;
     private DataBaseManager dataBaseManager = new DataBaseManager();
 
@@ -56,11 +52,11 @@ public class ActivityGenericService extends IntentService implements SensorEvent
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        tableNum = intent.getIntExtra("tabNum",0);
+        tableNum = intent.getIntExtra("tabNum", 0);
         serviceName = intent.getStringExtra("serviceName");
-        Toast.makeText(this, serviceName + " Started "+tableNum, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, serviceName + " Started " + tableNum, Toast.LENGTH_LONG).show();
         //sensors things
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             accBoolSensor = true;
@@ -114,7 +110,7 @@ public class ActivityGenericService extends IntentService implements SensorEvent
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        tableNum = intent.getIntExtra("tabNum",0);
+        tableNum = intent.getIntExtra("tabNum", 0);
         serviceName = intent.getStringExtra("serviceName");
     }
 
@@ -191,10 +187,10 @@ public class ActivityGenericService extends IntentService implements SensorEvent
         private float[] linear_acceleration = new float[3];
         private float[] raw_acceleration = new float[3];
         //gyro
-        public static final float EPSILON = 0.000000001f;
-        private static final float NS2S = 1.0f / 1000000000.0f;
-        private final float[] deltaRotationVector = new float[4];
-        private float timestamp;
+        static final float EPSILON = 0.000000001f;
+        static final float NS2S = 1.0f / 1000000000.0f;
+        final float[] deltaRotationVector = new float[4];
+        float timestamp;
         float[] gyro_axis = new float[4];
 
         private float[] final_values = new float[9];

@@ -32,7 +32,7 @@ public class Statistisc extends AppCompatActivity {
 
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
             dataBaseManager.SetDefaultAccTables();
-            this.tableNames = dataBaseManager.getAccTablesNames();
+            this.tableNames = DataBaseManager.getAccTablesNames();
         } else {
             Log.e("ERROR", "db not available");
         }
@@ -56,7 +56,7 @@ public class Statistisc extends AppCompatActivity {
                         }
                         db.close();
                     } catch (SQLiteException e) {
-                        statsResult.setText("\nERROR " + e.getMessage());
+                        statsResult.setText(R.string.error + e.getMessage());
                     }
                 }
             }

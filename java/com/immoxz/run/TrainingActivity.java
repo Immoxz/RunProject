@@ -1,10 +1,9 @@
 package com.immoxz.run;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.hardware.TriggerEvent;
-import android.hardware.TriggerEventListener;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,66 +13,41 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 public class TrainingActivity extends AppCompatActivity {
-    //     Get the Intent that started this activity and extract the string
-//    Intent intent = getIntent();
-//    String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
-//
-    private TriggerEventListener mTriggerEventListener;
-    private TextView accValueView;
-    private ImageButton btnWalk, btnRun, btnCycle;
-    private Button btnStop;
 
     //service references
     Intent serviceIntent = null;
-    Intent runServiceIntent = null;
-    Intent walkServiceIntent = null;
-    Intent cycleServiceIntent = null;
 
     //sqlLite database
     SQLiteDatabase db;
     private TextView dbPath;
-    private String storagePath;
-    private String[] tableNames;
     private DataBaseManager dataBaseManager = new DataBaseManager();
 
     //File Manager
     FileManager fileManager = new FileManager();
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_training);
         //initial intets for services
-        //runServiceIntent = new Intent(this, MyRunService.class);
         serviceIntent = new Intent(this, ActivityGenericService.class);
-        walkServiceIntent = new Intent(this, MyWalkService.class);
-        cycleServiceIntent = new Intent(this, MyCycleService.class);
 
         //things on xml
-        accValueView = (TextView) findViewById(R.id.accValues);
-        btnWalk = (ImageButton) findViewById(R.id.btnWalk);
-        btnRun = (ImageButton) findViewById(R.id.btnRun);
-        btnCycle = (ImageButton) findViewById(R.id.btnCycle);
-        btnStop = (Button) findViewById(R.id.btnStop);
+        ImageButton btnWalk = (ImageButton) findViewById(R.id.btnWalk);
+        ImageButton btnRun = (ImageButton) findViewById(R.id.btnRun);
+        ImageButton btnCycle = (ImageButton) findViewById(R.id.btnCycle);
+        Button btnStop = (Button) findViewById(R.id.btnStop);
         //DB
         dbPath = (TextView) findViewById(R.id.dbPath);
 
-        mTriggerEventListener = new TriggerEventListener() {
-            @Override
-            public void onTrigger(TriggerEvent event) {
-                System.out.println("trigger event??");
-            }
-        };
-
-
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
             dataBaseManager.SetDefaultAccTables();
-            this.tableNames = DataBaseManager.getAccTablesNames();
-            this.storagePath = dataBaseManager.getDbPath();
-            dbPath.setText("\nDB path: " + storagePath);
+            String storagePath = dataBaseManager.getDbPath();
+            dbPath.setText(R.string.db_path + storagePath);
             dbPath.append("\nAll Done");
         } else {
-            dbPath.setText("Sorry couldn't get db");
+            dbPath.setText(R.string.db_not_found);
         }
 
         //button work
@@ -114,23 +88,25 @@ public class TrainingActivity extends AppCompatActivity {
 
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onResume() {
         super.onResume();
         try {
             this.db = dataBaseManager.getDb();
         } catch (SQLiteException e) {
-            dbPath.setText("\nERROR " + e.getMessage());
+            dbPath.setText(R.string.error + e.getMessage());
         }
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onPause() {
         super.onPause();
         try {
             db.close();
         } catch (SQLiteException e) {
-            dbPath.setText("\nERROR " + e.getMessage());
+            dbPath.setText(R.string.error + e.getMessage());
         }
     }
 

@@ -22,18 +22,6 @@
         <activity android:name=".Statistisc" />
 
         <service
-            android:name=".MyRunService"
-            android:enabled="true"
-            android:exported="true" />
-        <service
-            android:name=".MyWalkService"
-            android:enabled="true"
-            android:exported="true" />
-        <service
-            android:name=".MyCycleService"
-            android:enabled="true"
-            android:exported="true" />
-        <service
             android:name=".ActivityGenericService"
             android:exported="true">
         </service>
