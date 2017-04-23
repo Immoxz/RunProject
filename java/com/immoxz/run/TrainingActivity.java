@@ -31,12 +31,15 @@ public class TrainingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_training);
         //initial intets for services
+//        serviceIntent = new Intent(this, ActivityGenericIntentService.class);
         serviceIntent = new Intent(this, ActivityGenericService.class);
 
         //things on xml
         ImageButton btnWalk = (ImageButton) findViewById(R.id.btnWalk);
         ImageButton btnRun = (ImageButton) findViewById(R.id.btnRun);
         ImageButton btnCycle = (ImageButton) findViewById(R.id.btnCycle);
+        ImageButton btnStand = (ImageButton) findViewById(R.id.btnStand);
+        ImageButton btnSit = (ImageButton) findViewById(R.id.btnSit);
         Button btnStop = (Button) findViewById(R.id.btnStop);
         //DB
         dbPath = (TextView) findViewById(R.id.dbPath);
@@ -51,6 +54,24 @@ public class TrainingActivity extends AppCompatActivity {
         }
 
         //button work
+        btnSit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stopService(serviceIntent);
+                serviceIntent.putExtra("tabNum", 0);
+                serviceIntent.putExtra("serviceName", "Sit");
+                startService(serviceIntent);
+            }
+        });
+        btnStand.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stopService(serviceIntent);
+                serviceIntent.putExtra("tabNum", 2);
+                serviceIntent.putExtra("serviceName", "Stand");
+                startService(serviceIntent);
+            }
+        });
         btnWalk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

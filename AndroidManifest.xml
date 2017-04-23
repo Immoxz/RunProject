@@ -22,9 +22,12 @@
         <activity android:name=".Statistisc" />
 
         <service
+            android:name=".ActivityGenericIntentService"
+            android:exported="true"></service>
+        <service
             android:name=".ActivityGenericService"
-            android:exported="true">
-        </service>
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>
