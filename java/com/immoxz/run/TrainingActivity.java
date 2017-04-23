@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 public class TrainingActivity extends AppCompatActivity {
 
+
     //service references
     Intent serviceIntent = null;
 
@@ -57,7 +58,9 @@ public class TrainingActivity extends AppCompatActivity {
         btnSit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                stopService(serviceIntent);
+                if (serviceIntent != null) {
+                    stopService(serviceIntent);
+                }
                 serviceIntent.putExtra("tabNum", 0);
                 serviceIntent.putExtra("serviceName", "Sit");
                 startService(serviceIntent);
@@ -66,7 +69,9 @@ public class TrainingActivity extends AppCompatActivity {
         btnStand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                stopService(serviceIntent);
+                if (serviceIntent != null) {
+                    stopService(serviceIntent);
+                }
                 serviceIntent.putExtra("tabNum", 2);
                 serviceIntent.putExtra("serviceName", "Stand");
                 startService(serviceIntent);
@@ -75,17 +80,20 @@ public class TrainingActivity extends AppCompatActivity {
         btnWalk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopService(serviceIntent);
+                if (serviceIntent != null) {
+                    stopService(serviceIntent);
+                }
                 serviceIntent.putExtra("tabNum", 4);
                 serviceIntent.putExtra("serviceName", "Walk");
                 startService(serviceIntent);
-                //startService(walkServiceIntent);
             }
         });
         btnRun.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopService(serviceIntent);
+                if (serviceIntent != null) {
+                    stopService(serviceIntent);
+                }
                 serviceIntent.putExtra("tabNum", 6);
                 serviceIntent.putExtra("serviceName", "Run");
                 startService(serviceIntent);
@@ -94,7 +102,9 @@ public class TrainingActivity extends AppCompatActivity {
         btnCycle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopService(serviceIntent);
+                if (serviceIntent != null) {
+                    stopService(serviceIntent);
+                }
                 serviceIntent.putExtra("tabNum", 8);
                 serviceIntent.putExtra("serviceName", "Cycle");
                 startService(serviceIntent);
@@ -103,7 +113,9 @@ public class TrainingActivity extends AppCompatActivity {
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopService(serviceIntent);
+                if (serviceIntent != null){
+                    stopService(serviceIntent);
+                }
             }
         });
 

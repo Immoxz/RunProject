@@ -77,7 +77,7 @@ public class ActivityGenericService extends Service {
         Notification barNotify = bBuilder.build();
         this.startForeground(1, barNotify);
 
-        return START_STICKY;
+        return Service.START_REDELIVER_INTENT;
     }
 
     protected void showToast(final String msg) {
@@ -101,7 +101,8 @@ public class ActivityGenericService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        showToast("Finishing TutorialService");
+        showToast("Finishing " + serviceName);
+        mServiceHandler.stop();
         stopSelf();
     }
 
@@ -116,6 +117,8 @@ public class ActivityGenericService extends Service {
         private Sensor lightSensor;
         private boolean lightBoolSensor = false;
 
+        SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
         //  database
         private String[] tableNames;
         private DataBaseManager dataBaseManager = new DataBaseManager();
@@ -128,10 +131,12 @@ public class ActivityGenericService extends Service {
             super(looper);
         }
 
+
         @Override
         public void handleMessage(Message msg) {
+
+            tableNum = msg.arg2;
             //sensors things
-            SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             if (mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
                 accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
                 accBoolSensor = true;
@@ -163,8 +168,6 @@ public class ActivityGenericService extends Service {
             } else {
                 Log.e("ERROR", "db not available");
             }
-            //setting audio reciver
-            myReceiver = new MusicIntentReceiver();
 
         }
 
@@ -176,6 +179,9 @@ public class ActivityGenericService extends Service {
             float[] light_sensor = new float[1];
             float[] headset_values = new float[1];
             List<float[]> all_values = new ArrayList<>();
+
+            //setting audio reciver
+            myReceiver = new MusicIntentReceiver();
 
             if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                 raw_acceleration = event.values;
@@ -197,6 +203,11 @@ public class ActivityGenericService extends Service {
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int i) {
+
+        }
+
+        public void stop() {
+            mSensorManager.unregisterListener(this);
 
         }
 
