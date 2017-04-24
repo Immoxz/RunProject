@@ -23,6 +23,10 @@ public class ActivityGenericService extends Service implements SensorEventListen
 
     private Sensor accSensor;
     private boolean accBoolSensor = false;
+    private Sensor gyroscopeSensor;
+    private boolean gyroscopeBoolSensor = false;
+    private Sensor lightSensor;
+    private boolean lightBoolSensor = false;
 
     private int tableNum;
 
@@ -31,13 +35,19 @@ public class ActivityGenericService extends Service implements SensorEventListen
 
     SensorManager mSensorManager;
 
-//    music resive
+    //Music receiver
     private static final String TAG = "MainActivity";
     private MusicIntentReceiver myReceiver;
 
     //File Manager
     FileManager fileManager = new FileManager();
 
+    //variables for final results
+    float[] raw_acceleration;
+    float[] gyro_axis;
+    float[] light_sensor;
+    float[] headset_values;
+    List<float[]> all_values = null;
 
     public ActivityGenericService() {
     }
@@ -53,6 +63,11 @@ public class ActivityGenericService extends Service implements SensorEventListen
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        raw_acceleration = new float[4];
+        gyro_axis = new float[5];
+        light_sensor = new float[2];
+        headset_values = new float[1];
+        all_values = new ArrayList<>();
 
         tableNum = intent.getIntExtra("tabNum", 0);
         String serviceName = intent.getStringExtra("serviceName");
@@ -68,9 +83,25 @@ public class ActivityGenericService extends Service implements SensorEventListen
         } else {
             Log.e("ERROR", "there is no accelerometer");
         }
-
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
+            gyroscopeSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            gyroscopeBoolSensor = true;
+        } else {
+            Log.e("ERROR", "there is no gravity sensor");
+        }
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null) {
+            lightSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+            lightBoolSensor = true;
+        } else {
+            Log.e("ERROR", "there is no light sensor");
+        }
+        //register all sensors
         if (accBoolSensor)
             mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if (gyroscopeBoolSensor)
+            mSensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if (lightBoolSensor)
+            mSensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
             tableNames = DataBaseManager.getAccTablesNames();
@@ -110,35 +141,47 @@ public class ActivityGenericService extends Service implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        // grab the values and timestamp -- off the main thread
-
         Sensor sensor = event.sensor;
-        float[] raw_acceleration = new float[3];
-        float[] gyro_axis = new float[4];
-        float[] light_sensor = new float[1];
-        float[] headset_values = new float[1];
-        List<float[]> all_values = new ArrayList<>();
-
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            raw_acceleration = event.values;
+            raw_acceleration[0] = event.values[0];
+            raw_acceleration[1] = event.values[1];
+            raw_acceleration[2] = event.values[2];
+            //adding max value of Sensors to range to process it later
+            raw_acceleration[3] = sensor.getMaximumRange();
         } else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             gyro_axis[0] = event.values[0];
             gyro_axis[1] = event.values[1];
             gyro_axis[2] = event.values[2];
             gyro_axis[3] = event.timestamp;
         } else if (sensor.getType() == Sensor.TYPE_LIGHT) {
-            light_sensor = event.values;
+            light_sensor[0] = event.values[0];
+            //adding max value of Sensors to range to process it later
+            light_sensor[1] = sensor.getMaximumRange();
         }
 
         headset_values[0] = myReceiver.getHeadset_val();
-        all_values.add(raw_acceleration);
-        all_values.add(gyro_axis);
-        all_values.add(light_sensor);
-        all_values.add(headset_values);
+        if (all_values.size() == 0) {
+            all_values.add(raw_acceleration);
+        } else {
+            all_values.set(0, raw_acceleration);
+        }
+        if (all_values.size() == 1) {
+            all_values.add(gyro_axis);
+        } else {
+            all_values.set(1, gyro_axis);
+        }
+        if (all_values.size() == 2) {
+            all_values.add(light_sensor);
+        } else {
+            all_values.set(2, light_sensor);
+        }
+        if (all_values.size() == 3) {
+            all_values.add(headset_values);
+        } else {
+            all_values.set(3, headset_values);
+        }
 
         new SensorEventLoggerTask().execute(all_values);
-        // stop the service
-//        stopSelf();
     }
 
     private class SensorEventLoggerTask extends
@@ -149,7 +192,8 @@ public class ActivityGenericService extends Service implements SensorEventListen
         //creating values for accuracy
         private float[] gravity = new float[3];
         private float[] linear_acceleration = new float[3];
-        private float[] raw_acceleration = new float[3];
+        private float[] raw_acceleration;
+        private float max_acceleration;
         //gyro
         static final float EPSILON = 0.000000001f;
         static final float NS2S = 1.0f / 1000000000.0f;
@@ -163,6 +207,7 @@ public class ActivityGenericService extends Service implements SensorEventListen
         @Override
         protected final Void doInBackground(List<float[]>... events) {
             raw_acceleration = events[0].get(0);
+            max_acceleration = events[0].get(0)[3];
             // In this example, alpha is calculated as t / (t + dT),
             // where t is the low-pass filter's time-constant and
             // dT is the event delivery rate.
@@ -174,9 +219,9 @@ public class ActivityGenericService extends Service implements SensorEventListen
             gravity[2] = alpha * gravity[2] + (1 - alpha) * raw_acceleration[2];
 
             // Remove the gravity contribution with the high-pass filter.
-            linear_acceleration[0] = raw_acceleration[0]+70 - gravity[0];
-            linear_acceleration[1] = raw_acceleration[1]+70 - gravity[1];
-            linear_acceleration[2] = raw_acceleration[2]+70 - gravity[2];
+            linear_acceleration[0] = raw_acceleration[0] + max_acceleration - gravity[0];
+            linear_acceleration[1] = raw_acceleration[1] + max_acceleration - gravity[1];
+            linear_acceleration[2] = raw_acceleration[2] + max_acceleration - gravity[2];
 
             gyro_axis = events[0].get(1);
             // This timestep's delta rotation to be multiplied by the current rotation
@@ -213,19 +258,32 @@ public class ActivityGenericService extends Service implements SensorEventListen
                 //TODO:SKONCZYC POMYSLEC O CI JAK i tak nie działa na moim urzadzeniu.
             }
             timestamp = gyro_axis[3];
-            final_values[0] = linear_acceleration[0];
-            final_values[1] = linear_acceleration[1];
-            final_values[2] = linear_acceleration[2];
-            final_values[3] = deltaRotationVector[0];
-            final_values[4] = deltaRotationVector[1];
-            final_values[5] = deltaRotationVector[2];
-            final_values[6] = deltaRotationVector[3];
-            final_values[7] = events[0].get(2)[0];
+            final_values[0] = normalizeVariables(linear_acceleration[0], max_acceleration);
+            final_values[1] = normalizeVariables(linear_acceleration[1], max_acceleration);
+            final_values[2] = normalizeVariables(linear_acceleration[2], max_acceleration);
+            //mocking max result for gyro
+            final_values[3] = normalizeVariables(deltaRotationVector[0],100);
+            final_values[4] = normalizeVariables(deltaRotationVector[1],100);
+            final_values[5] = normalizeVariables(deltaRotationVector[2],100);
+            final_values[6] = normalizeVariables(deltaRotationVector[3],100);
+            final_values[7] = normalizeVariables(events[0].get(2)[0],events[0].get(2)[1]);
             final_values[8] = events[0].get(3)[0];
 
             dataBaseManager.InsertToAccTable(tableNames[tableNum], final_values);
 
             return null;
+        }
+
+        public float normalizeVariables(float value, float maxval) {
+            float normalizedResult;
+            if (value / (2 * maxval) < 0) {
+                normalizedResult = 0;
+            } else if (value / (2 * maxval) > 1) {
+                normalizedResult = 1;
+            } else {
+                normalizedResult = value / (2 * maxval);
+            }
+            return normalizedResult;
         }
     }
 
@@ -241,7 +299,8 @@ public class ActivityGenericService extends Service implements SensorEventListen
             this.headset_val = headset_val;
         }
 
-        @Override public void onReceive(Context context, Intent intent) {
+        @Override
+        public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Intent.ACTION_HEADSET_PLUG)) {
                 int state = intent.getIntExtra("state", -1);
                 switch (state) {
