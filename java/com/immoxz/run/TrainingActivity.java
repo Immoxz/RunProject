@@ -13,8 +13,6 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 public class TrainingActivity extends AppCompatActivity {
-
-
     //service references
     Intent serviceIntent = null;
 
@@ -32,8 +30,7 @@ public class TrainingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_training);
         //initial intets for services
-//        serviceIntent = new Intent(this, ActivityGenericIntentService.class);
-        serviceIntent = new Intent(this, ActivityGenericService.class);
+        serviceIntent = new Intent(getApplicationContext(), ActivityGenericService.class);
 
         //things on xml
         ImageButton btnWalk = (ImageButton) findViewById(R.id.btnWalk);
@@ -50,6 +47,10 @@ public class TrainingActivity extends AppCompatActivity {
             String storagePath = dataBaseManager.getDbPath();
             dbPath.setText(R.string.db_path + storagePath);
             dbPath.append("\nAll Done");
+            String[] maxval = dataBaseManager.getAccMaxValues();
+            for (int i = 0; i < maxval.length; i++) {
+                dbPath.append(maxval[i]);
+            }
         } else {
             dbPath.setText(R.string.db_not_found);
         }
@@ -58,7 +59,7 @@ public class TrainingActivity extends AppCompatActivity {
         btnSit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (serviceIntent != null) {
+                if (serviceIntent.getAction() != null) {
                     stopService(serviceIntent);
                 }
                 serviceIntent.putExtra("tabNum", 0);
@@ -69,7 +70,7 @@ public class TrainingActivity extends AppCompatActivity {
         btnStand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (serviceIntent != null) {
+                if (serviceIntent.getAction() != null) {
                     stopService(serviceIntent);
                 }
                 serviceIntent.putExtra("tabNum", 2);
@@ -80,7 +81,7 @@ public class TrainingActivity extends AppCompatActivity {
         btnWalk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (serviceIntent != null) {
+                if (serviceIntent.getAction() != null) {
                     stopService(serviceIntent);
                 }
                 serviceIntent.putExtra("tabNum", 4);
@@ -91,7 +92,8 @@ public class TrainingActivity extends AppCompatActivity {
         btnRun.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (serviceIntent != null) {
+                System.out.println(serviceIntent.getAction());
+                if (serviceIntent.getAction() != null) {
                     stopService(serviceIntent);
                 }
                 serviceIntent.putExtra("tabNum", 6);
@@ -102,7 +104,7 @@ public class TrainingActivity extends AppCompatActivity {
         btnCycle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (serviceIntent != null) {
+                if (serviceIntent.getAction() != null) {
                     stopService(serviceIntent);
                 }
                 serviceIntent.putExtra("tabNum", 8);
@@ -113,7 +115,7 @@ public class TrainingActivity extends AppCompatActivity {
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (serviceIntent != null){
+                if (serviceIntent.getAction() != null) {
                     stopService(serviceIntent);
                 }
             }

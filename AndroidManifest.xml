@@ -23,11 +23,11 @@
 
         <service
             android:name=".ActivityGenericIntentService"
-            android:exported="true"></service>
+            android:exported="true" />
         <service
             android:name=".ActivityGenericService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
     </application>
 
 </manifest>

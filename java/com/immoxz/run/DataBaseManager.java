@@ -1,5 +1,6 @@
 package com.immoxz.run;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Environment;
@@ -181,5 +182,44 @@ public class DataBaseManager extends AppCompatActivity {
     public static String[] getAccTablesNames() {
         return ALL_TABLES_NAMES;
     }
+
+    public String[] getAccMaxValues() {
+
+        String[] maxValues=new String[9];
+
+        for (int i = 0; i < ALL_TABLES_NAMES.length-1; i++) {
+
+            String workingTableName = ALL_TABLES_NAMES[i];
+//                startInserting_walk = startInserting_run = startInserting_cycle = false;
+            String maxQuery = "SELECT MAX(acc_x_axis), "
+                    + " MAX(acc_y_axis), "
+                    + " MAX(acc_z_axis), "
+                    + " MAX(gyro_deltaRotationVector_x_axis), "
+                    + " MAX(gyro_deltaRotationVector_y_axis), "
+                    + " MAX(gyro_deltaRotationVector_z_axis), "
+                    + " MAX(gyro_deltaRotationVector_t_axis), "
+                    + " MAX(light_sensor), "
+                    + " MAX(jack_plugged) FROM " + workingTableName + ";";
+//            String maxQuery = "SELECT * FROM " + workingTableName + ";";
+            try {
+                db = getDb();
+                Cursor cursor = db.rawQuery(maxQuery, null);
+                if (cursor != null)
+                    cursor.moveToFirst();
+                maxValues[i] = "\nTable: "+workingTableName+" With: "
+                        +String.valueOf(cursor.getFloat(0))
+                        +" | "+String.valueOf(cursor.getFloat(1))
+                        +" | "+String.valueOf(cursor.getFloat(2))
+                        +" | "+String.valueOf(cursor.getFloat(8));
+                System.out.println(maxValues);
+                cursor.close();
+                db.close();
+            } catch (SQLiteException e) {
+                Log.e("ERROR", e.getMessage());
+            }
+        }
+        return maxValues;
+    }
 }
+
 

@@ -32,33 +32,16 @@ public class Statistisc extends AppCompatActivity {
 
         if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
             dataBaseManager.SetDefaultAccTables();
-            this.tableNames = DataBaseManager.getAccTablesNames();
+            tableNames = DataBaseManager.getAccTablesNames();
         } else {
             Log.e("ERROR", "db not available");
         }
+
+        updateStatsRows();
         btnShowStats.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for (int i = 0; i < tableNames.length; i++) {
-
-                    String workingTableName = tableNames[i];
-//                startInserting_walk = startInserting_run = startInserting_cycle = false;
-                    String countQuery = "SELECT * FROM " + workingTableName + ";";
-                    try {
-                        db = dataBaseManager.getDb();
-                        Cursor cursor = db.rawQuery(countQuery, null);
-                        int cnt = cursor.getCount();
-                        cursor.close();
-                        if (i == 0) {
-                            statsResult.setText("number of values in " + workingTableName + ": " + cnt);
-                        } else {
-                            statsResult.append("\nnumber of values in " + workingTableName + ": " + cnt);
-                        }
-                        db.close();
-                    } catch (SQLiteException e) {
-                        statsResult.setText(R.string.error + e.getMessage());
-                    }
-                }
+                updateStatsRows();
             }
         });
         btnDelTables.setOnClickListener(new View.OnClickListener() {
@@ -67,6 +50,28 @@ public class Statistisc extends AppCompatActivity {
                 flushDatabase();
             }
         });
+    }
+    private void updateStatsRows(){
+        for (int i = 0; i < tableNames.length; i++) {
+
+            String workingTableName = tableNames[i];
+//                startInserting_walk = startInserting_run = startInserting_cycle = false;
+            String countQuery = "SELECT * FROM " + workingTableName + ";";
+            try {
+                db = dataBaseManager.getDb();
+                Cursor cursor = db.rawQuery(countQuery, null);
+                int cnt = cursor.getCount();
+                cursor.close();
+                if (i == 0) {
+                    statsResult.setText("number of values in " + workingTableName + ": " + cnt);
+                } else {
+                    statsResult.append("\nnumber of values in " + workingTableName + ": " + cnt);
+                }
+                db.close();
+            } catch (SQLiteException e) {
+                statsResult.setText(R.string.error + e.getMessage());
+            }
+        }
     }
 
     private void flushDatabase() {
