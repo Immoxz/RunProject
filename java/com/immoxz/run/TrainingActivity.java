@@ -56,21 +56,21 @@ public class TrainingActivity extends AppCompatActivity {
         }
 
         //button work
-        btnSit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                stopService(serviceIntent);
-                serviceIntent.putExtra("tabNum", 0);
-                serviceIntent.putExtra("serviceName", "Sit");
-                startService(serviceIntent);
-            }
-        });
         btnStand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 stopService(serviceIntent);
-                serviceIntent.putExtra("tabNum", 2);
+                serviceIntent.putExtra("tabNum", 0);
                 serviceIntent.putExtra("serviceName", "Stand");
+                startService(serviceIntent);
+            }
+        });
+        btnSit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stopService(serviceIntent);
+                serviceIntent.putExtra("tabNum", 2);
+                serviceIntent.putExtra("serviceName", "Sit");
                 startService(serviceIntent);
             }
         });
