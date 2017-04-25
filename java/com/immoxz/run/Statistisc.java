@@ -78,6 +78,7 @@ public class Statistisc extends AppCompatActivity {
         if (tableNames.length != 0) {
             dataBaseManager.DropAllAccTables();
             dataBaseManager.SetDefaultAccTables();
+            updateStatsRows();
         }
     }
 }
