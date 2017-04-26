@@ -185,9 +185,9 @@ public class DataBaseManager extends AppCompatActivity {
 
     public String[] getAccMaxValues() {
 
-        String[] maxValues=new String[9];
+        String[] maxValues = new String[ALL_TABLES_NAMES.length - 1];
 
-        for (int i = 0; i < ALL_TABLES_NAMES.length-1; i++) {
+        for (int i = 0; i < ALL_TABLES_NAMES.length - 1; i++) {
 
             String workingTableName = ALL_TABLES_NAMES[i];
 //                startInserting_walk = startInserting_run = startInserting_cycle = false;
@@ -200,17 +200,16 @@ public class DataBaseManager extends AppCompatActivity {
                     + " MAX(gyro_deltaRotationVector_t_axis), "
                     + " MAX(light_sensor), "
                     + " MAX(jack_plugged) FROM " + workingTableName + ";";
-//            String maxQuery = "SELECT * FROM " + workingTableName + ";";
             try {
                 db = getDb();
                 Cursor cursor = db.rawQuery(maxQuery, null);
                 if (cursor != null)
                     cursor.moveToFirst();
-                maxValues[i] = "\nTable: "+workingTableName+" With: "
-                        +String.valueOf(cursor.getFloat(0))
-                        +" | "+String.valueOf(cursor.getFloat(1))
-                        +" | "+String.valueOf(cursor.getFloat(2))
-                        +" | "+String.valueOf(cursor.getFloat(8));
+                maxValues[i] = "\nMax " + workingTableName + ": "
+                        + String.valueOf(cursor.getFloat(0))
+                        + "|" + String.valueOf(cursor.getFloat(1))
+                        + "|" + String.valueOf(cursor.getFloat(2))
+                        + "|" + String.valueOf(cursor.getFloat(7));
                 System.out.println(maxValues);
                 cursor.close();
                 db.close();
@@ -219,6 +218,43 @@ public class DataBaseManager extends AppCompatActivity {
             }
         }
         return maxValues;
+    }
+
+    public String[] getAccMinValues() {
+
+        String[] minValues = new String[ALL_TABLES_NAMES.length - 1];
+
+        for (int i = 0; i < ALL_TABLES_NAMES.length - 1; i++) {
+
+            String workingTableName = ALL_TABLES_NAMES[i];
+//                startInserting_walk = startInserting_run = startInserting_cycle = false;
+            String minQuery = "SELECT MIN(acc_x_axis), "
+                    + " MIN(acc_y_axis), "
+                    + " MIN(acc_z_axis), "
+                    + " MIN(gyro_deltaRotationVector_x_axis), "
+                    + " MIN(gyro_deltaRotationVector_y_axis), "
+                    + " MIN(gyro_deltaRotationVector_z_axis), "
+                    + " MIN(gyro_deltaRotationVector_t_axis), "
+                    + " MIN(light_sensor), "
+                    + " MIN(jack_plugged) FROM " + workingTableName + ";";
+            try {
+                db = getDb();
+                Cursor cursor = db.rawQuery(minQuery, null);
+                if (cursor != null)
+                    cursor.moveToFirst();
+                minValues[i] = "\nMin " + workingTableName + " "
+                        + String.valueOf(cursor.getFloat(0))
+                        + "|" + String.valueOf(cursor.getFloat(1))
+                        + "|" + String.valueOf(cursor.getFloat(2))
+                        + "|" + String.valueOf(cursor.getFloat(7));
+                System.out.println(minQuery);
+                cursor.close();
+                db.close();
+            } catch (SQLiteException e) {
+                Log.e("ERROR", e.getMessage());
+            }
+        }
+        return minValues;
     }
 }
 

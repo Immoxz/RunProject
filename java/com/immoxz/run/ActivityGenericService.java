@@ -13,6 +13,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -22,9 +23,7 @@ import java.util.List;
 public class ActivityGenericService extends Service implements SensorEventListener {
 
     private Sensor accSensor;
-    private boolean accBoolSensor = false;
     private Sensor lightSensor;
-    private boolean lightBoolSensor = false;
 
     private int tableNum;
 
@@ -34,12 +33,21 @@ public class ActivityGenericService extends Service implements SensorEventListen
     SensorManager mSensorManager;
 
     //    music resive
-    private static final String TAG = "MainActivity";
     private MusicIntentReceiver myReceiver;
 
     //File Manager
     FileManager fileManager = new FileManager();
 
+    //variables for acc change
+    float[] raw_acceleration;
+    float[] gyro_axis;
+    float[] light_sensor;
+    float[] headset_values;
+    List<float[]> all_values;
+
+    //keeping aplication alive
+    PowerManager mgr;
+    PowerManager.WakeLock wakeLock;
 
     public ActivityGenericService() {
     }
@@ -49,44 +57,37 @@ public class ActivityGenericService extends Service implements SensorEventListen
         super.onDestroy();
         mSensorManager.unregisterListener(this);
         unregisterReceiver(myReceiver);
+        wakeLock.release();
         stopSelf();
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        //inicializing variables
+        raw_acceleration = new float[4];
+        gyro_axis = new float[4];
+        light_sensor = new float[2];
+        headset_values = new float[1];
+        all_values = new ArrayList<>();
+
+        //setting audio reciver
+        myReceiver = new MusicIntentReceiver();
+
+        //creating sensor manager
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        //makeing power manager
+        mgr = (PowerManager) this.getSystemService(POWER_SERVICE);
+        wakeLock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakeLock");
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         tableNum = intent.getIntExtra("tabNum", 0);
         String serviceName = intent.getStringExtra("serviceName");
-
-        //setting audio reciver
-        myReceiver = new MusicIntentReceiver();
-
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-
-        if (mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
-            accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            accBoolSensor = true;
-        } else {
-            Log.e("ERROR", "there is no accelerometer");
-        }
-        if (mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null) {
-            lightSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-            lightBoolSensor = true;
-        } else {
-            Log.e("ERROR", "there is no accelerometer");
-        }
-
-        if (accBoolSensor)
-            mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        if (lightBoolSensor)
-            mSensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
-
-        if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
-            tableNames = DataBaseManager.getAccTablesNames();
-        } else {
-            Log.e("ERROR", "db not available");
-        }
 
         Intent bIntent = new Intent(ActivityGenericService.this, TrainingActivity.class);
         PendingIntent pbIntent = PendingIntent.getActivity(ActivityGenericService.this, 0, bIntent, 0);
@@ -95,16 +96,51 @@ public class ActivityGenericService extends Service implements SensorEventListen
                         .setSmallIcon(R.mipmap.run)
                         .setContentTitle(serviceName + "Sensor")
                         .setContentText("Service to gather human activity properties")
-                        .setAutoCancel(true)
                         .setOngoing(true)
                         .setContentIntent(pbIntent);
         Notification barNotify = bBuilder.build();
         this.startForeground(1, barNotify);
 
+        runSensorsScanning();
+        checkAndFillTables();
+        setAndRegisterMusicReciver();
+
+        wakeLock.acquire();
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    protected void setAndRegisterMusicReciver() {
         IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
         registerReceiver(myReceiver, filter);
+    }
 
-        return START_STICKY;
+    protected void checkAndFillTables() {
+        if (fileManager.isExternalStorageWritable() & fileManager.isExternalStorageWritable()) {
+            tableNames = DataBaseManager.getAccTablesNames();
+        } else {
+            Log.e("ERROR", "db not available");
+        }
+    }
+
+    protected void runSensorsScanning() {
+
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
+            accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        } else {
+            Log.e("ERROR", "there is no accelerometer");
+        }
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null) {
+            lightSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        } else {
+            Log.e("ERROR", "there is no light sensor");
+        }
+
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null)
+            mSensorManager.registerListener(this, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null)
+            mSensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
     }
 
     @Override
@@ -123,11 +159,6 @@ public class ActivityGenericService extends Service implements SensorEventListen
         // grab the values and timestamp -- off the main thread
 
         Sensor sensor = event.sensor;
-        float[] raw_acceleration = new float[4];
-        float[] gyro_axis = new float[4];
-        float[] light_sensor = new float[2];
-        float[] headset_values = new float[1];
-        List<float[]> all_values = new ArrayList<>();
 
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             raw_acceleration[0] = event.values[0];
@@ -147,14 +178,28 @@ public class ActivityGenericService extends Service implements SensorEventListen
         }
 
         headset_values[0] = myReceiver.getHeadset_val();
-        all_values.add(raw_acceleration);
-        all_values.add(gyro_axis);
-        all_values.add(light_sensor);
-        all_values.add(headset_values);
+        if (all_values.size() == 0) {
+            all_values.add(raw_acceleration);
+        } else {
+            all_values.set(0, raw_acceleration);
+        }
+        if (all_values.size() == 1) {
+            all_values.add(gyro_axis);
+        } else {
+            all_values.set(1, gyro_axis);
+        }
+        if (all_values.size() == 2) {
+            all_values.add(light_sensor);
+        } else {
+            all_values.set(2, light_sensor);
+        }
+        if (all_values.size() == 3) {
+            all_values.add(headset_values);
+        } else {
+            all_values.set(3, headset_values);
+        }
 
         new SensorEventLoggerTask().execute(all_values);
-        // stop the service
-//        stopSelf();
     }
 
     private class SensorEventLoggerTask extends
@@ -165,43 +210,37 @@ public class ActivityGenericService extends Service implements SensorEventListen
         //creating values for accuracy
         private float[] gravity = new float[3];
         private float[] linear_acceleration = new float[3];
-        private float[] raw_acceleration = new float[3];
-        private float max_acceleration = 0;
+        float timestamp;
+        float[] gyro_axis = new float[4];
         //gyro
         static final float EPSILON = 0.000000001f;
         static final float NS2S = 1.0f / 1000000000.0f;
-        final float[] deltaRotationVector = new float[4];
-        float timestamp;
-        float[] gyro_axis = new float[4];
-
         private float[] final_values = new float[9];
 
         @SafeVarargs
         @Override
         protected final Void doInBackground(List<float[]>... events) {
-            raw_acceleration[0] = events[0].get(0)[0];
-            raw_acceleration[1] = events[0].get(0)[1];
-            raw_acceleration[2] = events[0].get(0)[2];
-            max_acceleration = events[0].get(0)[3];
             // In this example, alpha is calculated as t / (t + dT),
             // where t is the low-pass filter's time-constant and
             // dT is the event delivery rate.
             final float alpha = 0.8f;
 
             // Isolate the force of gravity with the low-pass filter.
-            gravity[0] = alpha * gravity[0] + (1 - alpha) * raw_acceleration[0];
-            gravity[1] = alpha * gravity[1] + (1 - alpha) * raw_acceleration[1];
-            gravity[2] = alpha * gravity[2] + (1 - alpha) * raw_acceleration[2];
+            gravity[0] = alpha * gravity[0] + (1 - alpha) * events[0].get(0)[0];
+            gravity[1] = alpha * gravity[1] + (1 - alpha) * events[0].get(0)[1];
+            gravity[2] = alpha * gravity[2] + (1 - alpha) * events[0].get(0)[2];
 
             // Remove the gravity contribution with the high-pass filter.
-            linear_acceleration[0] = raw_acceleration[0] + max_acceleration - gravity[0];
-            linear_acceleration[1] = raw_acceleration[1] + max_acceleration - gravity[1];
-            linear_acceleration[2] = raw_acceleration[2] + max_acceleration - gravity[2];
+            linear_acceleration[0] = events[0].get(0)[0] + events[0].get(0)[3] - gravity[0];
+            linear_acceleration[1] = events[0].get(0)[1] + events[0].get(0)[3] - gravity[1];
+            linear_acceleration[2] = events[0].get(0)[2] + events[0].get(0)[3] - gravity[2];
 
             gyro_axis = events[0].get(1);
             // This timestep's delta rotation to be multiplied by the current rotation
             // after computing it from the gyro sample data.
             if (timestamp != 0) {
+
+                final float[] deltaRotationVector = new float[4];
                 final float dT = (gyro_axis[4] - timestamp) * NS2S;
                 // Axis of the rotation sample, not normalized yet.
                 float axisX = gyro_axis[0];
@@ -233,10 +272,10 @@ public class ActivityGenericService extends Service implements SensorEventListen
                 //TODO:SKONCZYC POMYSLEC O CI JAK i tak nie działa na moim urzadzeniu.
             }
             timestamp = gyro_axis[3];
-            final_values[0] = normalizeVariables(linear_acceleration[0], max_acceleration);
-            final_values[1] = normalizeVariables(linear_acceleration[1], max_acceleration);
-            final_values[2] = normalizeVariables(linear_acceleration[2], max_acceleration);
-            final_values[7] = normalizeVariables(events[0].get(2)[0], events[0].get(2)[1]);
+            final_values[0] = normalizeVariables(linear_acceleration[0], events[0].get(0)[3]);
+            final_values[1] = normalizeVariables(linear_acceleration[1], events[0].get(0)[3]);
+            final_values[2] = normalizeVariables(linear_acceleration[2], events[0].get(0)[3]);
+            final_values[7] = normalizeVariables(events[0].get(2)[0] + events[0].get(2)[1], events[0].get(2)[1]);
             final_values[8] = events[0].get(3)[0];
 
             dataBaseManager.InsertToAccTable(tableNames[tableNum], final_values);
@@ -247,13 +286,18 @@ public class ActivityGenericService extends Service implements SensorEventListen
 
     public float normalizeVariables(float value, float maxval) {
         float normalizedResult;
-        if (value / (2 * maxval) < 0) {
-            normalizedResult = 0;
-        } else if (value / (2 * maxval) > 1) {
-            normalizedResult = 1;
+        if (value != maxval || value != 0.0f || maxval != 0.0f) {
+
+            if (value / (2 * maxval) < 0f) {
+                normalizedResult = 0;
+            } else if (value / (2 * maxval) > 1f) {
+                normalizedResult = 1;
+            } else {
+                normalizedResult = value / (2 * maxval);
+                normalizedResult = (float) ((int) (normalizedResult * 100000f)) / 100000f;
+            }
         } else {
-            normalizedResult = value / (2 * maxval);
-            normalizedResult = (float) ((int) (normalizedResult * 100000f)) / 100000f;
+            normalizedResult = 0.5f;
         }
         return normalizedResult;
     }

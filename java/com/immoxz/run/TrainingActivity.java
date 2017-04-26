@@ -48,8 +48,10 @@ public class TrainingActivity extends AppCompatActivity {
             dbPath.setText(R.string.db_path + storagePath);
             dbPath.append("\nAll Done");
             String[] maxval = dataBaseManager.getAccMaxValues();
+            String[] minval = dataBaseManager.getAccMinValues();
             for (int i = 0; i < maxval.length; i++) {
                 dbPath.append(maxval[i]);
+                dbPath.append(minval[i]);
             }
         } else {
             dbPath.setText(R.string.db_not_found);
